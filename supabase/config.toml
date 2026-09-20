@@ -1,0 +1,46 @@
+project_id = "jamhbfkvczmqdfloimqb"
+
+[functions.document-signed-url]
+# Platform verification is enabled, and the handler verifies the caller again
+# before it checks the profile or reads document metadata.
+verify_jwt = true
+
+[functions.admin-create-user]
+# Platform verification is enabled, and the handler independently checks that
+# the verified caller has an active admin profile before creating any user.
+verify_jwt = true
+
+[functions.admin-upload-initiate]
+verify_jwt = true
+
+[functions.admin-upload-part-url]
+verify_jwt = true
+
+[functions.admin-upload-complete]
+verify_jwt = true
+
+[functions.admin-upload-cancel]
+verify_jwt = true
+
+[functions.admin-update-user-status]
+# The handler independently verifies the caller is an active administrator
+# before it uses the service-role client to update profiles.status.
+verify_jwt = true
+
+[functions.admin-delete-document]
+# The handler independently verifies the caller is an active administrator
+# before deleting the R2 object and its database record.
+verify_jwt = true
+
+[functions.library-access-status]
+# RLS hides revoked profiles. This endpoint verifies the JWT and returns only
+# the calling user's own access status so the library can show the right state.
+verify_jwt = true
+
+[functions.sign-up]
+# Registration validates and creates a restricted profile server-side.
+verify_jwt = false
+
+[functions.admin-claim]
+# The first authenticated account can bootstrap the administrator dashboard.
+verify_jwt = true

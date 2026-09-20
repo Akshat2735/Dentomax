@@ -1,0 +1,1 @@
+export default function Loading(){return <main className="system-state" aria-live="polite"><a className="brand-lockup" href="/"><span className="brand-mark">D</span><span>Dentomax <small>Library</small></span></a><span className="system-spinner" aria-hidden="true"/><p>Loading your library…</p></main>}
