@@ -33,12 +33,13 @@ Deno.serve(async (request) => {
   }
   if (!document?.storage_path) return json(request, { error: "document_not_found" }, 404);
 
-  const { error: deleteError } = await context.adminClient
+  const { error: markError } = await context.adminClient
     .from("documents")
-    .delete()
-    .eq("id", documentId);
-  if (deleteError) {
-    console.error("Unable to delete document database record", { callerId: context.callerId, documentId });
+    .update({ deletion_status: "deleting" })
+    .eq("id", documentId)
+    .in("deletion_status", ["active", "delete_failed"]);
+  if (markError) {
+    console.error("Unable to mark document for deletion", { callerId: context.callerId, documentId });
     return json(request, { error: "delete_failed" }, 500);
   }
 
@@ -48,14 +49,22 @@ Deno.serve(async (request) => {
       Key: document.storage_path,
     }));
   } catch (error) {
-    // Restore the record if R2 fails so the library never points to a missing file.
-    const { error: restoreError } = await context.adminClient.from("documents").insert(document);
-    if (restoreError) {
-      console.error("R2 deletion and document restoration both failed", { callerId: context.callerId, documentId, error: String(error) });
-      return json(request, { error: "record_restore_failed" }, 500);
+    const { error: failError } = await context.adminClient
+      .from("documents")
+      .update({ deletion_status: "delete_failed" })
+      .eq("id", documentId);
+    if (failError) {
+      console.error("R2 deletion and deletion-state update both failed", { callerId: context.callerId, documentId, error: String(error) });
+      return json(request, { error: "deletion_state_failed" }, 500);
     }
-    console.error("Unable to delete document object; database record restored", { callerId: context.callerId, documentId, error: String(error) });
+    console.error("Unable to delete document object; deletion is available for retry", { callerId: context.callerId, documentId, error: String(error) });
     return json(request, { error: "delete_failed" }, 500);
+  }
+
+  const { error: deleteError } = await context.adminClient.from("documents").delete().eq("id", documentId);
+  if (deleteError) {
+    console.error("Storage object deleted but database cleanup failed", { callerId: context.callerId, documentId });
+    return json(request, { error: "record_cleanup_failed" }, 500);
   }
 
   console.warn("Document deleted by administrator", {

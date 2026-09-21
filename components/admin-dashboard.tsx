@@ -15,7 +15,7 @@ type Profile = {
 type AccessState = "hydrating" | "signed_out" | "forbidden" | "ready" | "error";
 type TableState = "loading" | "ready" | "error";
 type LibraryStats = { documents: number; subjects: number };
-type AdminDocument = { id: string; title: string; subject: string; file_type: "pdf" | "epub" | "zip"; file_size: number | null; };
+type AdminDocument = { id: string; title: string; subject: string; file_type: "pdf" | "epub" | "zip"; file_size: number | null; deletion_status: "active" | "deleting" | "delete_failed"; };
 
 function functionStatus(error: unknown): number | null {
   if (!error || typeof error !== "object" || !("context" in error)) return null;
@@ -52,7 +52,7 @@ export function AdminDashboard() {
     setTableState("loading");
     const [{ data, error }, { data: documents, error: documentsError }] = await Promise.all([
       supabase.from("profiles").select("id, username, status, role, created_at").order("created_at", { ascending: false }),
-      supabase.from("documents").select("id, title, subject, file_type, file_size").order("created_at", { ascending: false }),
+      supabase.from("documents").select("id, title, subject, file_type, file_size, deletion_status").order("created_at", { ascending: false }),
     ]);
 
     if (error || documentsError) {
@@ -184,6 +184,7 @@ export function AdminDashboard() {
     });
     if (error || data?.deleted !== "true") {
       setDocumentErrors((current) => ({ ...current, [document.id]: actionError(error, "The document could not be deleted. Try again.") }));
+      void loadProfiles();
       return;
     }
     setDocuments((current) => current.filter((entry) => entry.id !== document.id));
@@ -264,7 +265,7 @@ export function AdminDashboard() {
       {!documents.length && <div className="access-card"><p>No documents have been added yet.</p></div>}
       {!!documents.length && <div className="admin-document-list">{matchingDocuments.map((document) => {
         const deleting = deletingDocumentIds.has(document.id);
-        return <div className="admin-document-row" key={document.id}><span className={`document-icon ${document.file_type}`} aria-hidden="true"><span>{document.file_type.toUpperCase()}</span></span><div className="admin-document-copy"><strong title={document.title}>{document.title}</strong><small>{document.subject} · {document.file_type.toUpperCase()}{document.file_size ? ` · ${(document.file_size / 1024 / 1024).toFixed(1)} MB` : ""}</small>{documentErrors[document.id] && <p className="table-error" role="alert">{documentErrors[document.id]}</p>}</div><button className="delete-button" type="button" onClick={() => void deleteDocument(document)} disabled={deleting}>{deleting ? "Deleting…" : "Delete"}</button></div>;
+        return <div className="admin-document-row" key={document.id}><span className={`document-icon ${document.file_type}`} aria-hidden="true"><span>{document.file_type.toUpperCase()}</span></span><div className="admin-document-copy"><strong title={document.title}>{document.title}</strong><small>{document.subject} · {document.file_type.toUpperCase()}{document.file_size ? ` · ${(document.file_size / 1024 / 1024).toFixed(1)} MB` : ""}</small>{document.deletion_status !== "active" && <span className={`deletion-status ${document.deletion_status}`}>{document.deletion_status === "deleting" ? "Deletion in progress" : "Storage deletion failed — retry available"}</span>}{documentErrors[document.id] && <p className="table-error" role="alert">{documentErrors[document.id]}</p>}</div><button className="delete-button" type="button" onClick={() => void deleteDocument(document)} disabled={deleting || document.deletion_status === "deleting"}>{deleting || document.deletion_status === "deleting" ? "Deleting…" : document.deletion_status === "delete_failed" ? "Retry delete" : "Delete"}</button></div>;
       })}</div>}
       {!!documents.length && !matchingDocuments.length && <div className="admin-empty-results"><strong>No documents match your search.</strong><button type="button" className="inline-button" onClick={() => setDocumentQuery("")}>Clear search</button></div>}
     </section>

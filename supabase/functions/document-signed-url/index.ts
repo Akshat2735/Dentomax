@@ -121,7 +121,7 @@ Deno.serve(async (request) => {
 
   const { data: document, error: documentError } = await adminClient
     .from("documents")
-    .select("storage_path, file_type")
+    .select("storage_path, file_type, deletion_status")
     .eq("id", documentId)
     .maybeSingle();
 
@@ -130,7 +130,7 @@ Deno.serve(async (request) => {
     return response(request, { error: "internal_error" }, 500);
   }
 
-  if (!document?.storage_path) {
+  if (!document?.storage_path || document.deletion_status !== "active") {
     return response(request, { error: "not_found" }, 404);
   }
 

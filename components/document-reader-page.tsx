@@ -16,7 +16,7 @@ export function DocumentReaderPage({ id }: { id: string }) {
     async function load() {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) { router.replace("/sign-in"); return; }
-      const { data, error } = await supabase.from("documents").select("id,title,subject,file_type").eq("id", id).maybeSingle();
+      const { data, error } = await supabase.from("documents").select("id,title,subject,file_type").eq("id", id).eq("deletion_status", "active").maybeSingle();
       if (!active) return;
       if (error) { console.error("Unable to load document metadata", error); setState("error"); return; }
       if (!data || data.file_type !== "pdf") { setState("missing"); return; }
