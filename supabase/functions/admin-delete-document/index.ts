@@ -24,7 +24,7 @@ Deno.serve(async (request) => {
 
   const { data: document, error: lookupError } = await context.adminClient
     .from("documents")
-    .select("id, storage_path")
+    .select("*")
     .eq("id", documentId)
     .maybeSingle();
   if (lookupError) {
@@ -33,23 +33,29 @@ Deno.serve(async (request) => {
   }
   if (!document?.storage_path) return json(request, { error: "document_not_found" }, 404);
 
+  const { error: deleteError } = await context.adminClient
+    .from("documents")
+    .delete()
+    .eq("id", documentId);
+  if (deleteError) {
+    console.error("Unable to delete document database record", { callerId: context.callerId, documentId });
+    return json(request, { error: "delete_failed" }, 500);
+  }
+
   try {
     await r2Client().send(new DeleteObjectCommand({
       Bucket: "dentomax-library",
       Key: document.storage_path,
     }));
   } catch (error) {
-    console.error("Unable to delete document object", { callerId: context.callerId, documentId, error: String(error) });
+    // Restore the record if R2 fails so the library never points to a missing file.
+    const { error: restoreError } = await context.adminClient.from("documents").insert(document);
+    if (restoreError) {
+      console.error("R2 deletion and document restoration both failed", { callerId: context.callerId, documentId, error: String(error) });
+      return json(request, { error: "record_restore_failed" }, 500);
+    }
+    console.error("Unable to delete document object; database record restored", { callerId: context.callerId, documentId, error: String(error) });
     return json(request, { error: "delete_failed" }, 500);
-  }
-
-  const { error: deleteError } = await context.adminClient
-    .from("documents")
-    .delete()
-    .eq("id", documentId);
-  if (deleteError) {
-    console.error("Document object deleted but database record cleanup failed", { callerId: context.callerId, documentId });
-    return json(request, { error: "record_cleanup_failed" }, 500);
   }
 
   console.warn("Document deleted by administrator", {

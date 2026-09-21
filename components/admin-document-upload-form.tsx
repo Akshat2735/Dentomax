@@ -34,10 +34,8 @@ const errorMessages: Record<string, string> = {
   invalid_batch: "A batch can contain up to 20 files and 12 GB in total.",
   upload_initiation_failed: "The upload could not be prepared. Please try again.",
   invalid_upload_session: "The secure upload session expired. Start the file again.",
-  uploaded_file_invalid: "The uploaded file failed validation and was removed.",
   uploaded_size_mismatch: "The uploaded file size did not match and was removed.",
   uploaded_content_type_invalid: "The uploaded file type did not match and was removed.",
-  pdf_required: "Only genuine PDF files are accepted.",
   uploaded_file_invalid: "The file contents do not match its selected format and were removed.",
   document_creation_failed: "The library record could not be created. The file was removed.",
   document_creation_rollback_failed: "The library record could not be created and cleanup needs attention. Please contact an administrator.",
@@ -154,7 +152,7 @@ export function AdminDocumentUploadForm() {
       const additions = selected.filter((file) => !known.has(`${file.name}:${file.size}:${file.lastModified}`)).flatMap((file) => {
         const fileType = fileTypeFor(file.name);
         return fileType ? [{ id: crypto.randomUUID(), file, fileType, title: defaultTitle(file.name), status: "ready" as const, progress: 0 }] : [];
-      }));
+      });
       return [...current, ...additions];
     });
   }
