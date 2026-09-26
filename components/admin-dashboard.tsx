@@ -15,7 +15,7 @@ type Profile = {
 type AccessState = "hydrating" | "signed_out" | "forbidden" | "ready" | "error";
 type TableState = "loading" | "ready" | "error";
 type LibraryStats = { documents: number; subjects: number };
-type AdminDocument = { id: string; title: string; subject: string; file_type: "pdf" | "epub" | "zip"; file_size: number | null; deletion_status: "active" | "deleting" | "delete_failed"; };
+type AdminDocument = { id: string; title: string; subject: string; file_type: "pdf" | "epub" | "zip"; file_size: number | null; };
 
 function functionStatus(error: unknown): number | null {
   if (!error || typeof error !== "object" || !("context" in error)) return null;
@@ -46,13 +46,12 @@ export function AdminDashboard() {
   const [documents, setDocuments] = useState<AdminDocument[]>([]);
   const [deletingDocumentIds, setDeletingDocumentIds] = useState<Set<string>>(new Set());
   const [documentErrors, setDocumentErrors] = useState<Record<string, string>>({});
-  const [documentQuery, setDocumentQuery] = useState("");
 
   const loadProfiles = useCallback(async () => {
     setTableState("loading");
     const [{ data, error }, { data: documents, error: documentsError }] = await Promise.all([
       supabase.from("profiles").select("id, username, status, role, created_at").order("created_at", { ascending: false }),
-      supabase.from("documents").select("id, title, subject, file_type, file_size, deletion_status").order("created_at", { ascending: false }),
+      supabase.from("documents").select("id, title, subject, file_type, file_size").order("created_at", { ascending: false }),
     ]);
 
     if (error || documentsError) {
@@ -184,7 +183,6 @@ export function AdminDashboard() {
     });
     if (error || data?.deleted !== "true") {
       setDocumentErrors((current) => ({ ...current, [document.id]: actionError(error, "The document could not be deleted. Try again.") }));
-      void loadProfiles();
       return;
     }
     setDocuments((current) => current.filter((entry) => entry.id !== document.id));
@@ -207,8 +205,6 @@ export function AdminDashboard() {
   const activeUsers = profiles.filter((profile) => profile.status === "active").length;
   const waitingUsers = profiles.filter((profile) => profile.status === "revoked").length;
   const adminUsers = profiles.filter((profile) => profile.role === "admin").length;
-  const matchingDocuments = documents.filter((document) => [document.title, document.subject, document.file_type]
-    .join(" ").toLowerCase().includes(documentQuery.trim().toLowerCase()));
 
   return <div className="admin-dashboard">
     <section className="dashboard-overview">
@@ -261,13 +257,11 @@ export function AdminDashboard() {
 
     <section className="dashboard-section documents-management-section">
       <div className="section-heading"><div><p className="eyebrow">Library</p><h2>Manage documents</h2><p>Remove a document and its protected stored file from the collection.</p></div><span className="status-pill active">{documents.length} stored</span></div>
-      {!!documents.length && <label className="admin-document-search"><span aria-hidden="true">⌕</span><input value={documentQuery} onChange={(event) => setDocumentQuery(event.target.value)} placeholder="Search by title, subject, or format" aria-label="Search stored documents" />{documentQuery && <button type="button" onClick={() => setDocumentQuery("")} aria-label="Clear document search">×</button>}</label>}
       {!documents.length && <div className="access-card"><p>No documents have been added yet.</p></div>}
-      {!!documents.length && <div className="admin-document-list">{matchingDocuments.map((document) => {
+      {!!documents.length && <div className="admin-document-list">{documents.map((document) => {
         const deleting = deletingDocumentIds.has(document.id);
-        return <div className="admin-document-row" key={document.id}><span className={`document-icon ${document.file_type}`} aria-hidden="true"><span>{document.file_type.toUpperCase()}</span></span><div className="admin-document-copy"><strong title={document.title}>{document.title}</strong><small>{document.subject} · {document.file_type.toUpperCase()}{document.file_size ? ` · ${(document.file_size / 1024 / 1024).toFixed(1)} MB` : ""}</small>{document.deletion_status !== "active" && <span className={`deletion-status ${document.deletion_status}`}>{document.deletion_status === "deleting" ? "Deletion in progress" : "Storage deletion failed — retry available"}</span>}{documentErrors[document.id] && <p className="table-error" role="alert">{documentErrors[document.id]}</p>}</div><button className="delete-button" type="button" onClick={() => void deleteDocument(document)} disabled={deleting || document.deletion_status === "deleting"}>{deleting || document.deletion_status === "deleting" ? "Deleting…" : document.deletion_status === "delete_failed" ? "Retry delete" : "Delete"}</button></div>;
+        return <div className="admin-document-row" key={document.id}><span className={`document-icon ${document.file_type}`} aria-hidden="true"><span>{document.file_type.toUpperCase()}</span></span><div className="admin-document-copy"><strong title={document.title}>{document.title}</strong><small>{document.subject} · {document.file_type.toUpperCase()}{document.file_size ? ` · ${(document.file_size / 1024 / 1024).toFixed(1)} MB` : ""}</small>{documentErrors[document.id] && <p className="table-error" role="alert">{documentErrors[document.id]}</p>}</div><button className="delete-button" type="button" onClick={() => void deleteDocument(document)} disabled={deleting}>{deleting ? "Deleting…" : "Delete"}</button></div>;
       })}</div>}
-      {!!documents.length && !matchingDocuments.length && <div className="admin-empty-results"><strong>No documents match your search.</strong><button type="button" className="inline-button" onClick={() => setDocumentQuery("")}>Clear search</button></div>}
     </section>
   </div>;
 }

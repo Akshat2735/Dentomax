@@ -17,7 +17,7 @@ export const R2_ENDPOINT =
   "https://bc06c1eb78ba4b1f3c88125f4ff08e49.r2.cloudflarestorage.com";
 
 // This direct-to-R2 flow intentionally supports the library's existing ~1 GB PDFs.
-export const MAX_FILE_SIZE_BYTES = 3 * 1024 * 1024 * 1024;
+export const MAX_PDF_SIZE_BYTES = 3 * 1024 * 1024 * 1024;
 export const MULTIPART_THRESHOLD_BYTES = 64 * 1024 * 1024;
 export const MULTIPART_PART_SIZE_BYTES = 64 * 1024 * 1024;
 export const MAX_FILES_PER_BATCH = 20;
@@ -32,13 +32,6 @@ const MAX_TAGS = 20;
 const MAX_TAG_LENGTH = 50;
 
 export type UploadMode = "put" | "multipart";
-export type DocumentFileType = "pdf" | "epub" | "zip";
-
-const fileTypes: Record<DocumentFileType, { extension: RegExp; contentType: string }> = {
-  pdf: { extension: /\.pdf$/i, contentType: "application/pdf" },
-  epub: { extension: /\.epub$/i, contentType: "application/epub+zip" },
-  zip: { extension: /\.zip$/i, contentType: "application/zip" },
-};
 
 export interface UploadMetadata {
   clientId: string;
@@ -48,7 +41,6 @@ export interface UploadMetadata {
   tags: string[];
   fileName: string;
   fileSize: number;
-  fileType: DocumentFileType;
 }
 
 export interface UploadSession {
@@ -153,14 +145,12 @@ export function validateUploadMetadata(value: unknown): UploadMetadata | null {
   const topic = asTrimmedString(input.topic) || "general";
   const fileName = asTrimmedString(input.fileName);
   const fileSize = input.fileSize;
-  const fileType = input.fileType;
   const tagsInput = input.tags;
 
   if (!clientId || !title || !subject || !fileName ||
     title.length > MAX_TITLE_LENGTH || subject.length > MAX_SUBJECT_LENGTH ||
-    topic.length > MAX_TOPIC_LENGTH || typeof fileType !== "string" || !(fileType in fileTypes) ||
-    !fileTypes[fileType as DocumentFileType].extension.test(fileName) ||
-    !Number.isSafeInteger(fileSize) || fileSize <= 0 || fileSize > MAX_FILE_SIZE_BYTES ||
+    topic.length > MAX_TOPIC_LENGTH || !/\.pdf$/i.test(fileName) ||
+    !Number.isSafeInteger(fileSize) || fileSize <= 0 || fileSize > MAX_PDF_SIZE_BYTES ||
     !Array.isArray(tagsInput)) {
     return null;
   }
@@ -170,7 +160,7 @@ export function validateUploadMetadata(value: unknown): UploadMetadata | null {
   const uniqueTags = [...new Set(tags as string[])];
   if (uniqueTags.length > MAX_TAGS) return null;
 
-  return { clientId, title, subject, topic, tags: uniqueTags, fileName, fileSize, fileType: fileType as DocumentFileType };
+  return { clientId, title, subject, topic, tags: uniqueTags, fileName, fileSize };
 }
 
 function slugifySegment(value: string): string {
@@ -183,8 +173,8 @@ function slugifySegment(value: string): string {
 }
 
 export function storagePathFor(metadata: UploadMetadata): string {
-  const filename = metadata.fileName.replace(/\.(pdf|epub|zip)$/i, "");
-  return `${slugifySegment(metadata.subject)}/${slugifySegment(metadata.topic)}/${crypto.randomUUID()}-${slugifySegment(filename)}.${metadata.fileType}`;
+  const filename = metadata.fileName.replace(/\.pdf$/i, "");
+  return `${slugifySegment(metadata.subject)}/${slugifySegment(metadata.topic)}/${crypto.randomUUID()}-${slugifySegment(filename)}.pdf`;
 }
 
 function bytesToBase64Url(bytes: Uint8Array): string {
@@ -280,7 +270,7 @@ export async function initiateDirectUpload(
     });
     const uploadUrl = await getSignedUrl(
       r2,
-      new PutObjectCommand({ Bucket: R2_BUCKET, Key: key, ContentType: fileTypes[metadata.fileType].contentType }),
+      new PutObjectCommand({ Bucket: R2_BUCKET, Key: key, ContentType: "application/pdf" }),
       { expiresIn: PRESIGNED_URL_EXPIRY_SECONDS },
     );
     return { clientId: metadata.clientId, mode: "put", session, uploadUrl };
@@ -289,7 +279,7 @@ export async function initiateDirectUpload(
   const started = await r2.send(new CreateMultipartUploadCommand({
     Bucket: R2_BUCKET,
     Key: key,
-    ContentType: fileTypes[metadata.fileType].contentType,
+    ContentType: "application/pdf",
   }));
   if (!started.UploadId) throw new Error("multipart_upload_id_missing");
   const partCount = Math.ceil(metadata.fileSize / MULTIPART_PART_SIZE_BYTES);
@@ -326,13 +316,11 @@ export async function signPartUploadUrl(session: UploadSession, partNumber: numb
   );
 }
 
-async function fileSignatureIsValid(r2: S3Client, key: string, fileType: DocumentFileType): Promise<boolean> {
+async function pdfSignatureIsValid(r2: S3Client, key: string): Promise<boolean> {
   const object = await r2.send(new GetObjectCommand({ Bucket: R2_BUCKET, Key: key, Range: "bytes=0-4" }));
   const body = object.Body as { transformToByteArray?: () => Promise<Uint8Array> } | undefined;
   if (!body?.transformToByteArray) return false;
-  const bytes = await body.transformToByteArray();
-  if (fileType === "pdf") return new TextDecoder().decode(bytes) === "%PDF-";
-  return bytes[0] === 0x50 && bytes[1] === 0x4b;
+  return new TextDecoder().decode(await body.transformToByteArray()) === "%PDF-";
 }
 
 export async function finalizeDirectUpload(
@@ -392,13 +380,13 @@ export async function finalizeDirectUpload(
       return { response: new Response(JSON.stringify({ error: "uploaded_size_mismatch" }), { status: 400 }), uploaded: false };
     }
     const contentType = head.ContentType?.split(";", 1)[0].trim().toLowerCase();
-    if (contentType !== fileTypes[session.metadata.fileType].contentType) {
+    if (contentType !== "application/pdf") {
       await r2.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: session.key }));
       return { response: new Response(JSON.stringify({ error: "uploaded_content_type_invalid" }), { status: 400 }), uploaded: false };
     }
-    if (!await fileSignatureIsValid(r2, session.key, session.metadata.fileType)) {
+    if (!await pdfSignatureIsValid(r2, session.key)) {
       await r2.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: session.key }));
-      return { response: new Response(JSON.stringify({ error: "uploaded_file_invalid" }), { status: 400 }), uploaded: false };
+      return { response: new Response(JSON.stringify({ error: "pdf_required" }), { status: 400 }), uploaded: false };
     }
 
     const { data: document, error: documentError } = await adminClient.from("documents").insert({
@@ -407,7 +395,7 @@ export async function finalizeDirectUpload(
       tags: session.metadata.tags,
       storage_path: session.key,
       file_size: session.metadata.fileSize,
-      file_type: session.metadata.fileType,
+      file_type: "pdf",
     }).select("id").single();
     if (documentError || !document) throw new Error("document_insert_failed");
     return {

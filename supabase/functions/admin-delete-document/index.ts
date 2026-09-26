@@ -24,7 +24,7 @@ Deno.serve(async (request) => {
 
   const { data: document, error: lookupError } = await context.adminClient
     .from("documents")
-    .select("*")
+    .select("id, storage_path")
     .eq("id", documentId)
     .maybeSingle();
   if (lookupError) {
@@ -33,37 +33,22 @@ Deno.serve(async (request) => {
   }
   if (!document?.storage_path) return json(request, { error: "document_not_found" }, 404);
 
-  const { error: markError } = await context.adminClient
-    .from("documents")
-    .update({ deletion_status: "deleting" })
-    .eq("id", documentId)
-    .in("deletion_status", ["active", "delete_failed"]);
-  if (markError) {
-    console.error("Unable to mark document for deletion", { callerId: context.callerId, documentId });
-    return json(request, { error: "delete_failed" }, 500);
-  }
-
   try {
     await r2Client().send(new DeleteObjectCommand({
       Bucket: "dentomax-library",
       Key: document.storage_path,
     }));
   } catch (error) {
-    const { error: failError } = await context.adminClient
-      .from("documents")
-      .update({ deletion_status: "delete_failed" })
-      .eq("id", documentId);
-    if (failError) {
-      console.error("R2 deletion and deletion-state update both failed", { callerId: context.callerId, documentId, error: String(error) });
-      return json(request, { error: "deletion_state_failed" }, 500);
-    }
-    console.error("Unable to delete document object; deletion is available for retry", { callerId: context.callerId, documentId, error: String(error) });
+    console.error("Unable to delete document object", { callerId: context.callerId, documentId, error: String(error) });
     return json(request, { error: "delete_failed" }, 500);
   }
 
-  const { error: deleteError } = await context.adminClient.from("documents").delete().eq("id", documentId);
+  const { error: deleteError } = await context.adminClient
+    .from("documents")
+    .delete()
+    .eq("id", documentId);
   if (deleteError) {
-    console.error("Storage object deleted but database cleanup failed", { callerId: context.callerId, documentId });
+    console.error("Document object deleted but database record cleanup failed", { callerId: context.callerId, documentId });
     return json(request, { error: "record_cleanup_failed" }, 500);
   }
 

@@ -1,0 +1,5 @@
+import Link from "next/link";
+
+export function SiteFooter() {
+  return <footer className="site-footer"><div className="site-footer-inner"><div className="footer-brand"><Link className="brand-lockup" href="/"><span className="brand-mark">D</span><span>Dentomax <small>Library</small></span></Link><p>A considered digital reference space for clinical learning, academic discovery, and professional development.</p></div><div className="footer-links"><section><h2>Explore</h2><Link href="/library">Library</Link><Link href="/explore">Discover resources</Link><Link href="/courses">Courses</Link></section><section><h2>Your space</h2><Link href="/my-library">My Library</Link><Link href="/bookmarks">Saved resources</Link><Link href="/recent">Recently viewed</Link></section><section><h2>Access</h2><Link href="/sign-in">Sign in</Link><Link href="/sign-up">Request access</Link><Link href="/admin/sign-in">Administrator</Link></section></div></div><div className="footer-base"><span>© {new Date().getFullYear()} Dentomax Library</span><span>Clinical knowledge, thoughtfully organised.</span></div></footer>;
+}

@@ -3,7 +3,7 @@
 import { ChangeEvent, DragEvent, FormEvent, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase-browser";
 
-const MAX_FILE_SIZE_BYTES = 3 * 1024 * 1024 * 1024;
+const MAX_PDF_SIZE_BYTES = 3 * 1024 * 1024 * 1024;
 const MAX_FILES_PER_BATCH = 20;
 const MAX_BATCH_SIZE_BYTES = 12 * 1024 * 1024 * 1024;
 
@@ -20,7 +20,6 @@ type RemoteUpload = {
 type QueuedFile = {
   id: string;
   file: File;
-  fileType: "pdf" | "epub" | "zip";
   title: string;
   status: ItemStatus;
   progress: number;
@@ -31,18 +30,19 @@ const errorMessages: Record<string, string> = {
   unauthorized: "Your session has expired. Please sign in again.",
   forbidden: "Only active administrator accounts can upload documents.",
   invalid_file_metadata: "One or more files have invalid metadata.",
-  invalid_batch: "A batch can contain up to 20 files and 12 GB in total.",
+  invalid_batch: "A batch can contain up to 20 PDFs and 12 GB in total.",
   upload_initiation_failed: "The upload could not be prepared. Please try again.",
   invalid_upload_session: "The secure upload session expired. Start the file again.",
+  uploaded_file_invalid: "The uploaded file failed validation and was removed.",
   uploaded_size_mismatch: "The uploaded file size did not match and was removed.",
   uploaded_content_type_invalid: "The uploaded file type did not match and was removed.",
-  uploaded_file_invalid: "The file contents do not match its selected format and were removed.",
+  pdf_required: "Only genuine PDF files are accepted.",
   document_creation_failed: "The library record could not be created. The file was removed.",
   document_creation_rollback_failed: "The library record could not be created and cleanup needs attention. Please contact an administrator.",
   cancel_failed: "The incomplete upload could not be cleaned up automatically.",
   request_failed: "The upload request was interrupted. Check your connection and retry the file.",
   r2_network_error: "R2 storage blocked this browser upload. Add this app origin to the R2 bucket CORS policy, then retry the file.",
-  r2_upload_failed: "The storage service rejected the upload. Retry the file or choose another supported format.",
+  r2_upload_failed: "The storage service rejected the upload. Retry the file or choose another PDF.",
   missing_upload_etag: "The upload completed without a storage confirmation. Retry the file.",
 };
 
@@ -51,19 +51,8 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(bytes < 10 * 1024 * 1024 ? 1 : 0)} MB`;
 }
 
-function fileTypeFor(filename: string): QueuedFile["fileType"] | null {
-  if (/\.pdf$/i.test(filename)) return "pdf";
-  if (/\.epub$/i.test(filename)) return "epub";
-  if (/\.zip$/i.test(filename)) return "zip";
-  return null;
-}
-
-function contentTypeFor(fileType: QueuedFile["fileType"]): string {
-  return fileType === "pdf" ? "application/pdf" : fileType === "epub" ? "application/epub+zip" : "application/zip";
-}
-
 function defaultTitle(filename: string): string {
-  return filename.replace(/\.(pdf|epub|zip)$/i, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+  return filename.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function parseTags(value: string): string[] {
@@ -141,18 +130,17 @@ export function AdminDocumentUploadForm() {
 
   function queueFiles(selected: File[]) {
     if (!selected.length) return;
-    const invalid = selected.find((file) => !fileTypeFor(file.name) || !file.size || file.size > MAX_FILE_SIZE_BYTES);
+    const invalid = selected.find((file) => !/\.pdf$/i.test(file.name) || !file.size || file.size > MAX_PDF_SIZE_BYTES);
     if (invalid) {
-      setBatchError(`“${invalid.name}” must be a non-empty PDF, EPUB, or ZIP file within the 3 GB per-file limit.`);
+      setBatchError(`“${invalid.name}” is not a non-empty PDF within the 3 GB per-file limit.`);
       return;
     }
     setBatchError("");
     setItems((current) => {
       const known = new Set(current.map((item) => `${item.file.name}:${item.file.size}:${item.file.lastModified}`));
-      const additions = selected.filter((file) => !known.has(`${file.name}:${file.size}:${file.lastModified}`)).flatMap((file) => {
-        const fileType = fileTypeFor(file.name);
-        return fileType ? [{ id: crypto.randomUUID(), file, fileType, title: defaultTitle(file.name), status: "ready" as const, progress: 0 }] : [];
-      });
+      const additions = selected.filter((file) => !known.has(`${file.name}:${file.size}:${file.lastModified}`)).map((file) => ({
+        id: crypto.randomUUID(), file, title: defaultTitle(file.name), status: "ready" as const, progress: 0,
+      }));
       return [...current, ...additions];
     });
   }
@@ -181,7 +169,7 @@ export function AdminDocumentUploadForm() {
         if (!remote.uploadUrl) throw new Error("upload_initiation_failed");
         await putToR2(remote.uploadUrl, item.file, (loaded) => updateItem(item.id, {
           progress: Math.round((loaded / item.file.size) * 100),
-        }), contentTypeFor(item.fileType));
+        }), "application/pdf");
       } else {
         if (!remote.partSize || !remote.partCount) throw new Error("upload_initiation_failed");
         let bytesUploaded = 0;
@@ -219,10 +207,10 @@ export function AdminDocumentUploadForm() {
     event.preventDefault();
     if (running) return;
     const candidates = items.filter((item) => item.status === "ready" || item.status === "error");
-    if (!candidates.length) return setBatchError("Select at least one file first.");
+    if (!candidates.length) return setBatchError("Select at least one PDF first.");
     if (!subject.trim()) return setBatchError("Enter a subject for this batch.");
     if (candidates.length > MAX_FILES_PER_BATCH || candidates.reduce((total, item) => total + item.file.size, 0) > MAX_BATCH_SIZE_BYTES) {
-      return setBatchError("A batch can contain up to 20 files and 12 GB in total.");
+      return setBatchError("A batch can contain up to 20 PDFs and 12 GB in total.");
     }
     const { data: sessionData } = await supabase.auth.getSession();
     const accessToken = sessionData.session?.access_token;
@@ -241,7 +229,6 @@ export function AdminDocumentUploadForm() {
           tags: parseTags(tags),
           fileName: item.file.name,
           fileSize: item.file.size,
-          fileType: item.fileType,
         })),
       });
       const remoteById = new Map(prepared.uploads.map((upload) => [upload.clientId, upload]));
@@ -281,13 +268,13 @@ export function AdminDocumentUploadForm() {
         <label className="full-width">Tags <span className="optional">optional, comma-separated; applied to this batch</span><input value={tags} onChange={(event) => setTags(event.target.value)} placeholder="composite, guide, esthetics" disabled={running} /></label>
       </div>
       <label className={`file-field upload-dropzone ${draggingFiles ? "dragging" : ""}`} htmlFor="pdf-files" onDragEnter={(event) => { event.preventDefault(); setDraggingFiles(true); }} onDragOver={(event) => event.preventDefault()} onDragLeave={(event) => { if (event.currentTarget === event.target) setDraggingFiles(false); }} onDrop={dropFiles}>
-        <span className="dropzone-icon">↑</span><strong>Drop library files here</strong><span>or <u>browse from your computer</u></span><small>PDF, EPUB, ZIP · up to 20 files · 3 GB per file</small>
-        <input id="pdf-files" name="files" className="file-picker-input" type="file" multiple accept="application/pdf,application/epub+zip,application/zip,.pdf,.epub,.zip" disabled={running} onChange={selectFiles} />
+        <span className="dropzone-icon">↑</span><strong>Drop PDF files here</strong><span>or <u>browse from your computer</u></span><small>PDF only · up to 20 files · 3 GB per file</small>
+        <input id="pdf-files" name="files" className="file-picker-input" type="file" multiple accept="application/pdf,.pdf" disabled={running} onChange={selectFiles} />
       </label>
       {items.length > 0 && <section className="queue" aria-live="polite">
         <div className="queue-heading"><div><strong>Upload queue</strong><span>{items.length} file{items.length === 1 ? "" : "s"} ready</span></div><span>{formatBytes(items.reduce((total, item) => total + item.file.size, 0))} total</span></div>
         {items.map((item) => <div className="queue-item" key={item.id}>
-          <div className="queue-file"><span className="upload-file-icon">{item.fileType.toUpperCase()}</span><div><strong title={item.file.name}>{item.file.name}</strong><small>{formatBytes(item.file.size)} · {item.status === "complete" ? "Uploaded" : item.status === "ready" ? "Ready to upload" : item.status === "error" ? "Needs attention" : `${item.progress}%`}</small></div></div>
+          <div className="queue-file"><span className="upload-file-icon">PDF</span><div><strong title={item.file.name}>{item.file.name}</strong><small>{formatBytes(item.file.size)} · {item.status === "complete" ? "Uploaded" : item.status === "ready" ? "Ready to upload" : item.status === "error" ? "Needs attention" : `${item.progress}%`}</small></div></div>
           <label className="title-field"><span>Title</span><input value={item.title} maxLength={300} disabled={running || item.status === "complete"} onChange={(event) => updateItem(item.id, { title: event.target.value })} /></label>
           {item.status === "ready" || item.status === "error" ? <button type="button" className="text-button queue-remove" aria-label={`Remove ${item.file.name}`} disabled={running} onClick={() => setItems((current) => current.filter((entry) => entry.id !== item.id))}>×</button> : <span className={`status ${item.status}`}>{item.status === "complete" ? "Added" : `${item.progress}%`}</span>}
           {(item.status === "uploading" || item.status === "finalizing") && <div className="progress-track item-progress"><div className="progress-bar" style={{ width: `${item.progress}%` }} /></div>}
@@ -295,7 +282,7 @@ export function AdminDocumentUploadForm() {
         </div>)}
       </section>}
       {batchError && <p className="notice error" role="alert">{batchError}</p>}
-      <button className="button" type="submit" disabled={running}>{running ? "Uploading batch…" : "Upload selected files"}</button>
+      <button className="button" type="submit" disabled={running}>{running ? "Uploading batch…" : "Upload selected PDFs"}</button>
     </form>
   );
 }
