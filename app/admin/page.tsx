@@ -2,10 +2,10 @@ import { AdminDashboard } from "@/components/admin-dashboard";
 
 export default function AdminDashboardPage() {
   return (
-    <main className="page-shell admin-page-shell">
+    <main className="page-shell admin-page-shell" id="main-content">
       <nav className="workspace-nav" aria-label="Admin navigation">
         <a className="brand-lockup" href="/"><span className="brand-mark">D</span><span>Dentomax <small>Admin</small></span></a>
-        <div className="nav-actions"><a className="nav-link" href="/library">View library</a><a className="nav-link active" href="/admin">Dashboard</a></div>
+        <div className="nav-actions"><a className="nav-link" href="/books">View library</a><a className="nav-link active" href="/admin">Dashboard</a></div>
       </nav>
       <section className="page-heading">
         <p className="eyebrow">Dentomax Library</p>

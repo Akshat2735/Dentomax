@@ -20,7 +20,7 @@ function signupErrorMessage(error: unknown): string {
   return signupErrors.signup_failed;
 }
 
-export function SignUpForm() {
+export function SignUpForm({ destination = "/" }: { destination?: string }) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -61,7 +61,7 @@ export function SignUpForm() {
       return;
     }
 
-    router.replace("/sign-in?created=1");
+    router.replace(`/sign-in?created=1&next=${encodeURIComponent(destination)}`);
   }
 
   return (
@@ -76,7 +76,7 @@ export function SignUpForm() {
       {error && <p className="notice error" role="alert">{error}</p>}
       <p className="security-note"><span aria-hidden="true">▣</span> Your information is used only to manage your protected library access.</p>
       <button className="button signup-submit" type="submit" disabled={submitting}>{submitting ? <><span className="button-spinner" />Creating account...</> : "Create account"}</button>
-      <p className="signin-prompt">Already have an account? <a href="/sign-in">Sign in</a></p>
+      <p className="signin-prompt">Already have an account? <a href={`/sign-in?next=${encodeURIComponent(destination)}`}>Sign in</a></p>
     </form>
   );
 }

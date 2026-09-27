@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { LibraryNavigation } from "@/components/library-navigation";
 
 export default function CourseNotFound() {
-  return <><LibraryNavigation /><main className="library-shell course-shell"><section className="courses-empty course-not-found"><span>!</span><h1>Course not found</h1><p>This course does not exist in the local Dentomax course catalogue.</p><Link href="/courses">Return to Courses</Link></section></main></>;
+  return <main className="library-shell course-shell" id="main-content"><section className="courses-empty course-not-found"><span>!</span><h1>Course not found</h1><p>This course does not exist in the local Dentomax course catalogue.</p><div className="not-found-actions"><Link className="button" href="/courses">Return to Courses</Link><Link className="button secondary-button" href="/">Go home</Link></div></section></main>;
 }

@@ -2,7 +2,7 @@ import { AdminSignInForm } from "@/components/admin-sign-in-form";
 
 export default function AdminSignInPage() {
   return (
-    <main className="page-shell narrow auth-shell">
+    <main className="page-shell narrow auth-shell" id="main-content">
       <nav className="auth-nav" aria-label="Administrator navigation"><a className="brand-lockup" href="/"><span className="brand-mark">D</span><span>Dentomax <small>Admin</small></span></a><a className="nav-link" href="/sign-in">Library sign in</a></nav>
       <section className="page-heading">
         <p className="eyebrow">Dentomax Library / Admin</p>

@@ -1,0 +1,583 @@
+/* Layered medical-academic environments */
+
+.site-atmosphere {
+  --atm-scroll: 0;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.atm-layer {
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+}
+
+.atm-base {
+  background:
+    radial-gradient(1200px 800px at 6% -10%, #5a3a20 0%, transparent 52%),
+    radial-gradient(900px 700px at 100% 110%, #163836 0%, transparent 48%),
+    linear-gradient(180deg, #2a1c12 0%, #1a2422 55%, #101716 100%);
+}
+
+.atm-texture {
+  background-image: url("/atmosphere/paper-fiber.webp");
+  background-size: 380px 380px;
+  opacity: .22;
+  mix-blend-mode: overlay;
+}
+
+.atm-environment {
+  width: 100%;
+  height: 118%;
+  object-fit: cover;
+  transform: translate3d(0, calc(var(--atm-scroll) * -32px), 0);
+  will-change: transform;
+}
+
+.atm-hall {
+  opacity: .86;
+  object-position: 50% 38%;
+  filter: saturate(.9) contrast(1.1) brightness(.88);
+}
+
+.atm-desk {
+  opacity: 0;
+  object-position: 50% 58%;
+  filter: saturate(.72) contrast(.96) brightness(.95);
+}
+
+.atm-night {
+  opacity: 0;
+  object-position: 50% 32%;
+  filter: saturate(.7) brightness(.78);
+}
+
+.atm-architecture {
+  background-image: url("/atmosphere/arch-frame.svg");
+  background-size: 124% 124%;
+  background-position: center -6%;
+  opacity: .28;
+  mix-blend-mode: multiply;
+}
+
+.atm-grid {
+  opacity: 0;
+  background-image:
+    linear-gradient(rgba(42, 32, 18, .08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(42, 32, 18, .08) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.atm-manuscript {
+  opacity: 0;
+  background-image:
+    repeating-linear-gradient(180deg, transparent 0 28px, rgba(90, 62, 36, .05) 29px),
+    url("/atmosphere/paper-fiber.webp");
+  background-size: auto, 340px;
+  mix-blend-mode: multiply;
+}
+
+.atm-shelf {
+  position: absolute;
+  top: -10%;
+  height: 122%;
+  width: min(26vw, 400px);
+  object-fit: cover;
+  opacity: .72;
+  filter: saturate(.94) contrast(1.06);
+  transform: translate3d(0, calc(var(--atm-scroll) * -18px), 0);
+}
+
+.atm-shelf-left {
+  left: 0;
+  object-position: 18% center;
+  mask-image: linear-gradient(90deg, #000 0%, #000 42%, transparent 100%);
+}
+
+.atm-shelf-right {
+  right: 0;
+  transform: scaleX(-1) translate3d(0, calc(var(--atm-scroll) * -18px), 0);
+  object-position: 18% center;
+  mask-image: linear-gradient(270deg, #000 0%, #000 42%, transparent 100%);
+}
+
+.atm-shelf-faint {
+  opacity: .28;
+  filter: blur(1.4px) saturate(.7);
+}
+
+.atm-column {
+  position: absolute;
+  top: -4%;
+  height: 112%;
+  width: min(9vw, 120px);
+  opacity: .22;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.atm-column-left { left: min(18vw, 280px); }
+.atm-column-right { right: min(18vw, 280px); transform: scaleX(-1); }
+
+.atm-medical img {
+  position: absolute;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+.atm-plate {
+  width: min(36vw, 460px);
+  height: auto;
+  right: 4%;
+  top: 12%;
+  left: auto;
+  opacity: .06;
+  filter: sepia(.4);
+}
+
+.atm-anatomy-line {
+  width: min(24vw, 280px);
+  left: 5%;
+  bottom: 8%;
+  top: auto;
+  opacity: .07;
+}
+
+.atm-dental-diagram {
+  width: min(18vw, 220px);
+  right: 18%;
+  bottom: 12%;
+  top: auto;
+  opacity: .05;
+}
+
+.atm-light {
+  background:
+    radial-gradient(ellipse 80% 48% at 50% -8%, rgba(236, 196, 118, .3), transparent 58%),
+    radial-gradient(ellipse 42% 38% at 14% 88%, rgba(70, 130, 118, .14), transparent 70%),
+    linear-gradient(90deg, rgba(10, 8, 6, .58) 0%, transparent 18%, transparent 82%, rgba(10, 8, 6, .58) 100%);
+}
+
+.atm-readability {
+  background: radial-gradient(ellipse 56% 62% at 50% 32%, rgba(251, 244, 228, .28) 0%, rgba(251, 244, 228, .08) 48%, transparent 74%);
+}
+
+.atm-vignette {
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(8, 10, 9, .58) 100%);
+  box-shadow: inset 0 0 180px rgba(12, 10, 6, .5);
+}
+
+/* Home — enter the institution; hall recedes into night arcade on scroll */
+[data-variant="home"] .atm-hall {
+  opacity: calc(.94 - (var(--atm-scroll) * .42));
+}
+[data-variant="home"] .atm-night {
+  opacity: calc(.08 + (var(--atm-scroll) * .5));
+  mix-blend-mode: multiply;
+}
+[data-variant="home"] .atm-shelf { opacity: .42; width: min(17vw, 240px); }
+[data-variant="home"] .atm-column { opacity: .18; }
+[data-variant="home"] .atm-readability {
+  background: radial-gradient(ellipse 48% 54% at 36% 34%, rgba(252, 245, 228, .34) 0%, rgba(252, 245, 228, .08) 52%, transparent 72%);
+}
+[data-variant="home"] .atm-plate { opacity: .05; }
+
+/* Library — university stacks */
+[data-variant="library"] .atm-hall { opacity: .74; filter: blur(.5px) saturate(.84) brightness(.86); }
+[data-variant="library"] .atm-shelf { opacity: .9; width: min(28vw, 430px); }
+[data-variant="library"] .atm-column { opacity: .16; }
+[data-variant="library"] .atm-readability {
+  background: radial-gradient(ellipse 62% 76% at 50% 20%, rgba(253, 247, 232, .46) 0%, rgba(253, 247, 232, .12) 54%, transparent 78%);
+}
+[data-variant="library"] .atm-plate { opacity: .04; }
+
+/* Courses — academic catalog */
+[data-variant="courses"] .atm-base {
+  background: linear-gradient(180deg, #3b3224 0%, #24312e 100%);
+}
+[data-variant="courses"] .atm-manuscript { opacity: .55; }
+[data-variant="courses"] .atm-desk { opacity: .2; filter: blur(5px) saturate(.45); }
+[data-variant="courses"] .atm-grid { opacity: .5; }
+[data-variant="courses"] .atm-architecture { opacity: .1; }
+[data-variant="courses"] .atm-column { display: none; }
+[data-variant="courses"] .atm-readability {
+  background: radial-gradient(ellipse 74% 80% at 50% 16%, rgba(250, 243, 226, .42) 0%, rgba(244, 234, 210, .12) 58%, transparent 80%);
+}
+[data-variant="courses"] .atm-plate { right: 3%; top: 36%; opacity: .055; }
+
+/* Course detail — study room */
+[data-variant="course"] .atm-desk { opacity: .38; filter: blur(2.2px) saturate(.64); }
+[data-variant="course"] .atm-manuscript { opacity: .28; }
+[data-variant="course"] .atm-column { display: none; }
+[data-variant="course"] .atm-readability {
+  background: radial-gradient(ellipse 84% 86% at 50% 26%, rgba(253, 248, 236, .56) 0%, rgba(248, 240, 222, .16) 62%, transparent 84%);
+}
+[data-variant="course"] .atm-plate { left: 3%; right: auto; top: 28%; opacity: .04; }
+[data-variant="course"] .atm-grid { opacity: .16; }
+
+/* Dashboard — desk */
+[data-variant="study"] .atm-desk { opacity: .5; }
+[data-variant="study"] .atm-architecture { opacity: .08; }
+[data-variant="study"] .atm-column { display: none; }
+[data-variant="study"] .atm-readability {
+  background: radial-gradient(ellipse 84% 80% at 50% 18%, rgba(252, 246, 232, .5) 0%, rgba(245, 235, 214, .14) 64%, transparent 82%);
+}
+
+/* Auth / admin — night atrium */
+[data-variant="auth"] .atm-night { opacity: .68; }
+[data-variant="auth"] .atm-column { display: none; }
+[data-variant="auth"] .atm-readability {
+  background: radial-gradient(ellipse 64% 72% at 50% 42%, rgba(247, 240, 222, .46) 0%, transparent 76%);
+}
+
+[data-variant="admin"] .atm-night { opacity: .42; }
+[data-variant="admin"] .atm-column { display: none; }
+[data-variant="admin"] .atm-readability {
+  background: radial-gradient(ellipse 88% 86% at 50% 16%, rgba(250, 245, 232, .52) 0%, transparent 82%);
+}
+
+html,
+body {
+  background: #14110e !important;
+}
+
+.app-frame,
+.site-footer {
+  position: relative;
+  z-index: 1;
+}
+
+.library-shell,
+.institution-home,
+.signup-shell {
+  background: none !important;
+}
+
+.global-nav {
+  background: rgba(28, 22, 16, .42) !important;
+  backdrop-filter: blur(18px) saturate(1.15);
+  border-bottom-color: rgba(232, 214, 176, .12) !important;
+}
+
+.global-nav .brand-lockup,
+.global-nav nav a {
+  color: #f3ead8 !important;
+}
+
+.global-nav nav a:hover,
+.global-nav nav a.active {
+  color: #e8c98a !important;
+}
+
+.course-section-nav {
+  background: rgba(251, 245, 230, .72) !important;
+}
+
+.library-hero:before,
+.explore-hero:before,
+.courses-hero:after,
+.page-shell:not(.auth-shell):before {
+  display: none !important;
+}
+
+/* Home full-bleed bands */
+.institution-home {
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 100vh;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.home-inner {
+  width: min(1400px, 100%);
+  margin: 0 auto;
+  padding: 0 clamp(20px, 5vw, 78px);
+}
+
+.home-band {
+  position: relative;
+  isolation: isolate;
+}
+
+.home-band::before,
+.home-band::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.home-band-library {
+  min-height: 100vh;
+}
+
+.home-band-library .home-hero-copy {
+  padding: 10px 40px 16px 0;
+  background: linear-gradient(90deg, rgba(20, 14, 10, .58) 0%, rgba(20, 14, 10, .16) 72%, transparent 100%);
+  border-radius: 4px;
+}
+
+.home-band-library .home-hero-copy h1,
+.home-band-library .home-hero-copy p,
+.home-band-library .eyebrow {
+  color: #f6efe2 !important;
+}
+
+.home-band-library .home-hero-copy > p:not(.eyebrow) {
+  color: #d9cbb3 !important;
+}
+
+.home-band-library .institutional-nav {
+  background: linear-gradient(180deg, rgba(12, 10, 8, .5), transparent);
+  border-bottom-color: rgba(232, 214, 176, .16);
+}
+
+.home-band-library .institutional-nav .nav-link {
+  color: #e7dcc6 !important;
+}
+
+.home-band-library::before {
+  background:
+    linear-gradient(90deg, rgba(12, 8, 6, .55) 0%, rgba(12, 8, 6, .08) 22%, rgba(12, 8, 6, .08) 78%, rgba(12, 8, 6, .55) 100%),
+    linear-gradient(180deg, rgba(10, 8, 6, .18) 0%, transparent 30%, rgba(10, 8, 6, .48) 100%);
+}
+
+.home-hero-art {
+  opacity: .62;
+  mix-blend-mode: luminosity;
+  box-shadow: inset 0 0 0 20px rgba(255,255,255,.08), 0 26px 60px rgba(12, 8, 6, .35) !important;
+}
+
+.home-band-academic {
+  color: #e7efe9;
+  background-color: #0c1c20;
+  box-shadow: inset 0 40px 80px rgba(0, 0, 0, .35);
+}
+
+.home-band-academic::before {
+  background:
+    linear-gradient(180deg, rgba(12, 28, 32, .5) 0%, rgba(12, 28, 32, .78) 100%),
+    url("/atmosphere/institutional-night.webp") center / cover;
+}
+
+.home-band-academic .home-principles {
+  border-color: rgba(214, 228, 220, .16);
+}
+
+.home-band-academic .home-principles > div {
+  border-color: rgba(214, 228, 220, .12);
+}
+
+.home-band-academic h2 {
+  color: #f3efe4 !important;
+}
+
+.home-band-academic p,
+.home-band-academic span {
+  color: #c5d5cc !important;
+}
+
+.home-band-paper {
+  min-height: 52vh;
+}
+
+.home-band-paper::before {
+  background:
+    linear-gradient(180deg, rgba(250, 240, 218, .7) 0%, rgba(236, 220, 188, .8) 100%),
+    url("/atmosphere/paper-fiber.webp");
+  background-size: auto, 360px;
+}
+
+.home-band-paper::after {
+  background: url("/atmosphere/study-desk.webp") center 42% / cover;
+  opacity: .24;
+  mix-blend-mode: multiply;
+}
+
+.home-pathways {
+  padding-top: 88px;
+  padding-bottom: 56px;
+}
+
+.library-shell {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 0 96px !important;
+}
+
+.library-shell > .global-nav {
+  width: 100%;
+  padding-left: clamp(20px, 4vw, 64px);
+  padding-right: clamp(20px, 4vw, 64px);
+}
+
+.library-shell > .library-introduction,
+.library-shell > .library-experience,
+.library-shell > .personal-dashboard,
+.course-shell > .courses-hero,
+.course-shell > .courses-listing,
+.course-shell > .course-breadcrumb,
+.course-shell > .course-detail-hero,
+.course-shell > .course-section-nav,
+.course-shell > .course-detail-grid,
+.course-shell > .course-disclosure {
+  width: min(1440px, 100%);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(20px, 4vw, 64px);
+  padding-right: clamp(20px, 4vw, 64px);
+}
+
+.library-introduction .library-hero {
+  padding: 18px 40px 20px 0;
+  background: linear-gradient(90deg, rgba(16, 10, 8, .6) 0%, rgba(16, 10, 8, .16) 72%, transparent 100%);
+}
+
+.library-introduction .library-hero h1,
+.library-introduction .library-hero p,
+.library-introduction .library-hero .eyebrow {
+  color: #f6efe2 !important;
+}
+
+.library-introduction .library-hero > p:not(.eyebrow) {
+  color: #d7c9b0 !important;
+}
+
+.library-introduction,
+.library-experience,
+.personal-dashboard {
+  position: relative;
+}
+
+.library-hero h1,
+.personal-dashboard h1,
+.courses-hero h1,
+.course-detail-hero h1 {
+  text-shadow: 0 2px 24px rgba(12, 8, 6, .28);
+}
+
+.library-purpose {
+  margin-left: calc(50% - 50vw) !important;
+  margin-right: calc(50% - 50vw) !important;
+  width: 100vw;
+  padding-left: max(20px, calc(50vw - 700px)) !important;
+  padding-right: max(20px, calc(50vw - 700px)) !important;
+  color: #dce8e2;
+  background:
+    linear-gradient(180deg, rgba(14, 28, 32, .78), rgba(14, 28, 32, .88)),
+    url("/atmosphere/institutional-night.webp") center / cover;
+  border-color: rgba(220, 232, 224, .12) !important;
+}
+
+.library-purpose h2 {
+  color: #f4efe4 !important;
+}
+
+.library-purpose p {
+  color: #c3d2cb !important;
+}
+
+.library-purpose > div {
+  border-color: rgba(214, 228, 220, .12) !important;
+}
+
+.explore-hero,
+.courses-hero {
+  background:
+    linear-gradient(118deg, rgba(255, 250, 236, .72), rgba(232, 236, 220, .42)),
+    url("/atmosphere/paper-fiber.webp") !important;
+  background-size: auto, 320px !important;
+  box-shadow: 0 24px 60px rgba(16, 12, 8, .18);
+}
+
+.auth-shell {
+  background:
+    linear-gradient(135deg, rgba(255, 250, 236, .84), rgba(236, 244, 236, .68)),
+    url("/atmosphere/paper-fiber.webp") !important;
+}
+
+.dashboard-overview,
+.personal-dashboard {
+  background-image: url("/atmosphere/paper-fiber.webp");
+  background-size: 340px;
+}
+
+.signup-form-panel {
+  background:
+    linear-gradient(145deg, rgba(251, 246, 232, .84), rgba(236, 242, 232, .7)),
+    url("/atmosphere/paper-fiber.webp") !important;
+  background-size: auto, 320px;
+}
+
+.signup-brand-panel {
+  background:
+    radial-gradient(circle at 73% 23%, rgba(158, 214, 201, .22), transparent 30%),
+    linear-gradient(145deg, rgba(19, 51, 60, .55), rgba(32, 92, 93, .62)),
+    url("/atmosphere/institutional-night.webp") center / cover !important;
+}
+
+.system-state {
+  background: transparent !important;
+}
+
+.site-footer {
+  background:
+    radial-gradient(circle at 85% 18%, rgba(47, 125, 120, .28), transparent 33%),
+    linear-gradient(180deg, rgba(10, 22, 26, .5), rgba(8, 14, 16, .8)),
+    url("/atmosphere/institutional-night.webp") center / cover !important;
+  box-shadow: inset 0 50px 90px rgba(8, 14, 16, .5);
+}
+
+@media (max-width: 900px) {
+  .atm-shelf {
+    width: min(18vw, 150px);
+    opacity: .3;
+    filter: blur(2.4px);
+  }
+  .atm-architecture,
+  .atm-column { opacity: .08; }
+  .atm-medical { display: none; }
+  [data-variant="library"] .atm-shelf {
+    width: min(20vw, 170px);
+    opacity: .44;
+  }
+}
+
+@media (max-width: 640px) {
+  .atm-shelf,
+  .atm-architecture,
+  .atm-anatomy-line,
+  .atm-column,
+  .atm-grid { display: none; }
+  .atm-hall,
+  .atm-desk,
+  .atm-night { filter: blur(1.4px); }
+  [data-variant="home"] .atm-hall { opacity: .52; }
+  [data-variant="library"] .atm-hall { opacity: .44; }
+  .atm-readability {
+    background: linear-gradient(180deg, rgba(20, 14, 10, .38) 0%, rgba(20, 14, 10, .22) 100%) !important;
+  }
+  .atm-texture { opacity: .12; }
+  .home-inner { padding: 0 16px; }
+  .library-shell > .global-nav,
+  .library-shell > .library-introduction,
+  .library-shell > .library-experience,
+  .library-shell > .personal-dashboard,
+  .course-shell > .courses-hero,
+  .course-shell > .courses-listing {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atm-environment,
+  .atm-shelf,
+  .atm-shelf-right { transform: none; }
+}

@@ -16,10 +16,10 @@ export default function AuthCallbackPage() {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       if (!active) return;
       if (error) { setMessage("This sign-in link is invalid or has expired. Please request a new link or sign in again."); return; }
-      router.replace(params.get("type") === "recovery" ? "/reset-password" : "/library");
+      router.replace(params.get("type") === "recovery" ? "/reset-password" : "/books");
     }
     void finishAuthentication();
     return () => { active = false; };
   }, [router]);
-  return <main className="system-state"><a className="brand-lockup" href="/"><span className="brand-mark">D</span><span>Dentomax <small>Library</small></span></a><span className="system-spinner" aria-hidden="true"/><p role="status">{message}</p>{message.includes("invalid") && <a className="button" href="/sign-in">Return to sign in</a>}</main>;
+  return <main className="system-state" id="main-content"><a className="brand-lockup" href="/"><span className="brand-mark">D</span><span>Dentomax <small>Library</small></span></a><span className="system-spinner" aria-hidden="true"/><p role="status">{message}</p>{message.includes("invalid") && <a className="button" href="/sign-in">Return to sign in</a>}</main>;
 }

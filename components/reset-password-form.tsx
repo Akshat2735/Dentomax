@@ -12,6 +12,7 @@ export function ResetPasswordForm() {
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -77,15 +78,15 @@ export function ResetPasswordForm() {
   }
 
   return (
-    <form className="upload-card" onSubmit={submit}>
+    <form className="upload-card auth-form-card" onSubmit={submit}>
       <div className="field-grid single-column">
         <label>
           New password
-          <input type="password" minLength={8} required autoComplete="new-password" value={password} disabled={state === "saving"} onChange={(event) => setPassword(event.target.value)} />
+          <div className="password-input"><input type={showPassword ? "text" : "password"} minLength={8} required autoComplete="new-password" value={password} disabled={state === "saving"} onChange={(event) => setPassword(event.target.value)} /><button className="password-toggle" type="button" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword((current) => !current)}>{showPassword ? "Hide" : "Show"}</button></div>
         </label>
         <label>
           Confirm new password
-          <input type="password" minLength={8} required autoComplete="new-password" value={confirmation} disabled={state === "saving"} onChange={(event) => setConfirmation(event.target.value)} />
+          <div className="password-input"><input type={showPassword ? "text" : "password"} minLength={8} required autoComplete="new-password" value={confirmation} disabled={state === "saving"} onChange={(event) => setConfirmation(event.target.value)} /><button className="password-toggle" type="button" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword((current) => !current)}>{showPassword ? "Hide" : "Show"}</button></div>
         </label>
       </div>
       {message && <p className="notice error" role="alert">{message}</p>}

@@ -2,7 +2,7 @@ import { AdminClaimForm } from "@/components/admin-claim-form";
 
 export default function AdminSetupPage() {
   return (
-    <main className="page-shell narrow auth-shell">
+    <main className="page-shell narrow auth-shell" id="main-content">
       <nav className="auth-nav" aria-label="Administrator navigation"><a className="brand-lockup" href="/"><span className="brand-mark">D</span><span>Dentomax <small>Admin</small></span></a><a className="nav-link" href="/admin/sign-in">Admin sign in</a></nav>
       <section className="page-heading">
         <p className="eyebrow">Dentomax Library / Admin</p>

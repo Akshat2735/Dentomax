@@ -12,6 +12,7 @@ export function PasswordSignInForm({ redirectTo }: PasswordSignInFormProps) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const awaitingConfirmedSession = useRef(false);
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export function PasswordSignInForm({ redirectTo }: PasswordSignInFormProps) {
   }
 
   return (
-    <form className="upload-card" onSubmit={submit}>
+    <form className="upload-card auth-form-card" onSubmit={submit}>
       <div className="field-grid single-column">
         <label>
           Email address
@@ -55,13 +56,12 @@ export function PasswordSignInForm({ redirectTo }: PasswordSignInFormProps) {
         </label>
         <label>
           Password
-          <input name="password" type="password" required autoComplete="current-password" disabled={submitting} />
+          <div className="password-input"><input name="password" type={showPassword ? "text" : "password"} required autoComplete="current-password" disabled={submitting} /><button className="password-toggle" type="button" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword((current) => !current)}>{showPassword ? "Hide" : "Show"}</button></div>
         </label>
       </div>
       {error && <p className="notice error" role="alert">{error}</p>}
-      <button className="button" type="submit" disabled={submitting}>{submitting ? "Signing in…" : "Sign in"}</button>
+      <button className="button" type="submit" disabled={submitting}>{submitting ? <><span className="button-spinner" />Signing in…</> : "Sign in"}</button>
       <a className="form-link" href="/forgot-password">Forgot your password?</a>
-      {redirectTo === "/library" && <a className="form-link" href="/sign-up">Need an account? Create one</a>}
     </form>
   );
 }

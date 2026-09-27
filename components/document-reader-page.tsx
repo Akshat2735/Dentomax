@@ -15,7 +15,7 @@ export function DocumentReaderPage({ id }: { id: string }) {
     let active = true;
     async function load() {
       const { data: session } = await supabase.auth.getSession();
-      if (!session.session) { router.replace("/sign-in"); return; }
+      if (!session.session) { router.replace(`/sign-in?next=/books/${encodeURIComponent(id)}`); return; }
       const { data, error } = await supabase.from("documents").select("id,title,subject,file_type").eq("id", id).eq("deletion_status", "active").maybeSingle();
       if (!active) return;
       if (error) { console.error("Unable to load document metadata", error); setState("error"); return; }
@@ -25,5 +25,5 @@ export function DocumentReaderPage({ id }: { id: string }) {
     void load(); return () => { active = false; };
   }, [id, router]);
   if (documentInfo) return <PdfViewer documentId={documentInfo.id} title={documentInfo.title} subject={documentInfo.subject} onClose={() => router.back()} />;
-  return <main className="system-state"><a className="brand-lockup" href="/library"><span className="brand-mark">D</span><span>Dentomax <small>Library</small></span></a>{state === "loading" ? <><span className="system-spinner"/><p>Loading document…</p></> : <><h1>Unable to load this document.</h1><p>{state === "missing" ? "This document is unavailable or you no longer have access." : "Please try again or return to the library."}</p><a className="button" href="/library">Return to library</a></>}</main>;
+  return <main className="system-state"><a className="brand-lockup" href="/books"><span className="brand-mark">D</span><span>Dentomax <small>Library</small></span></a>{state === "loading" ? <><span className="system-spinner"/><p>Loading book…</p></> : <><h1>Unable to load this book.</h1><p>{state === "missing" ? "This book is unavailable or you no longer have access." : "Please try again or return to Books."}</p><a className="button" href="/books">Return to Books</a></>}</main>;
 }

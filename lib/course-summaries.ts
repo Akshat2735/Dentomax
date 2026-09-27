@@ -3,6 +3,7 @@ import summaries from "@/data/dentomax-academy-course-summaries.json";
 export type CourseSummary = {
   slug: string; title: string; category: string; shortDescription: string;
   durationClaims: string[]; searchText: string; imagePath: string; imageAlt: string;
+  price: { amount: string; regularAmount: string; saleAmount: string; currency: string; currencySymbol: string; minorUnit: number; isOnSale: boolean } | null;
 };
 
 export const courseSummaries = summaries as CourseSummary[];
