@@ -15,3 +15,5 @@
 .catalogue-search{min-height:52px}
 @media(max-width:1050px){.course-shell > .catalogue-hero{grid-template-columns:1fr;padding:22px clamp(18px,4vw,32px)}.catalogue-search-wrap{max-width:none}}
 @media(max-width:760px){.course-shell > .catalogue-hero{padding:20px 16px;gap:14px}.catalogue-hero-copy h1{font-size:clamp(1.55rem,7vw,1.9rem)}.catalogue-hero-copy>p:not(.eyebrow){font-size:.88rem}}
+
+.catalogue-hero-copy h1{text-shadow:none}
