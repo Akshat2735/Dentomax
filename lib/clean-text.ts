@@ -92,17 +92,33 @@ export function courseDuration(text: string): string | null {
   return found.size === 1 ? [...found][0] : null;
 }
 
+// ---- Eligibility ------------------------------------------------------------------------------------
+// The "eligibility" text was captured up to the end of the page section, so for three courses it also holds
+// something else: endodontics - the filler paragraph; machine procedures - the whole topic outline (1,264
+// characters); international fellowship - the certifying body. The real eligibility is always the leading
+// list of qualifications ("MBBS / BAMS / BUMS / BHMS & BDS", "10+2", ...), so keep that and drop the rest.
+const QUALIFICATION_LIST = /^(?:(?:MBBS|BAMS|BUMS|BHMS|BDS|[BM]\s?Sc\.?\s*Nursing|10\+2)\s*[/&,]?\s*)+/i;
+
+export function cleanEligibility(value: string | null): string | null {
+  if (value == null) return null;
+  const text = stripFiller(value);
+  const leading = QUALIFICATION_LIST.exec(text)?.[0];
+  const cleaned = leading ? leading.replace(/[\s/&,]+$/, "") : text;
+  return cleaned || null;
+}
+
 // ---- Putting it together ----------------------------------------------------------------------------
-export type CleanedCourseText = { text: string; short: string; duration: string | null; curriculumItems: string[] };
+export type CleanedCourseText = { text: string; short: string; duration: string | null; curriculumItems: string[]; eligibility: string | null };
 
 /** Cleaned text, summary, duration and curriculum for a course, from its raw full text and topic list. */
-export function cleanCourseText(fullPublicText: string, curriculumItems: string[]): CleanedCourseText {
+export function cleanCourseText(fullPublicText: string, curriculumItems: string[], eligibility: string | null = null): CleanedCourseText {
   const text = stripFiller(fullPublicText);
   return {
     text,
     short: leadText(text),
     duration: courseDuration(text),
     curriculumItems: curriculumItems.filter((item) => !isFillerItem(item)).map(tidyLabel).filter(Boolean),
+    eligibility: cleanEligibility(eligibility),
   };
 }
 

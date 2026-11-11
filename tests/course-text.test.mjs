@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { cleanCourseText, cleanSummaryText, courseDuration, isFillerItem, leadText, stripFiller, tidyLabel, FILLER_BLOCK } from "../lib/clean-text.ts";
+import { cleanCourseText, cleanEligibility, cleanSummaryText, courseDuration, isFillerItem, leadText, stripFiller, tidyLabel, FILLER_BLOCK } from "../lib/clean-text.ts";
 
 const read = (name) => JSON.parse(readFileSync(new URL(`../data/${name}`, import.meta.url), "utf8"));
 const sources = read("dentomax-academy-courses.json");
@@ -13,6 +13,26 @@ const OFF_TOPIC = /German|entrepreneur|promo video|13,000\+/i;
 // Reviewed by reading each course's own text (see PR description). null = no single clear duration.
 // international-fellowship says "10-day", "6 months" and "one year" in different places, so nothing is shown
 // until the client confirms which is right.
+// What the "Who this course is for" section shows. Only three courses had extra text glued onto it.
+const EXPECTED_ELIGIBILITY = {
+  "international-fellowship-in-facial-aesthetics": "MBBS / BAMS / BUMS / BHMS & BDS",
+  "certification-in-hair-restoration-removal-medical": "MBBS / BAMS / BUMS / BHMS & BDS",
+  "certification-in-chemical-peels": "MBBS / BAMS / BUMS / BHMS & BDS",
+  "certification-in-advance-machine-procedures-in-cosmetology": "MBBS / BAMS / BUMS / BHMS & BDS",
+  "certification-in-aesthetic-dentistry": "MBBS / BAMS / BUMS / BHMS & BDS",
+  "certification-in-advanced-laser-cosmetology": "MBBS / BAMS / BUMS / BHMS & BDS",
+  "fellowship-in-trichology": "MBBS / BAMS / BUMS / BHMS & BDS",
+  "certification-in-micropigmentation-non-medical": "10+2",
+  "post-graduate-diploma-in-clinical-cosmetology-medical": "MBBS / BAMS / BUMS / BHMS & BDS",
+  "msc-in-facial-aesthetics": "MBBS / BAMS / BUMS / BHMS & BDS",
+  "fellowship-in-facial-aesthetics-fifa": "MBBS / BAMS / BUMS / BHMS & BDS",
+  "post-graduate-diploma-in-clinical-cosmetology-non-medical": "MSC Nursing/ BSC Nursing/ 10+2",
+  "msc-in-cosmetology-non-medical": "Bsc Nursing/Msc Nursing/ 10+2",
+  "msc-in-aesthetic-nursing": "MBBS/BDS/BUMS/BAMS/Bsc Nursing/Msc Nursing",
+  "certification-in-advanced-endodontics": "MBBS / BAMS / BUMS / BHMS & BDS",
+  "certification-in-injectables-medical": "MBBS / BAMS / BUMS / BHMS & BDS",
+};
+
 const EXPECTED_DURATION = {
   "international-fellowship-in-facial-aesthetics": null,
   "certification-in-hair-restoration-removal-medical": null,
@@ -37,7 +57,7 @@ test("every course has a reviewed expected duration", () => {
 });
 
 for (const source of sources) {
-  const cleaned = cleanCourseText(source.fullPublicText, source.curriculumItems);
+  const cleaned = cleanCourseText(source.fullPublicText, source.curriculumItems, source.eligibilitySourceText);
 
   test(`${source.slug}: text and summary are clean`, () => {
     assert.ok(!FILLER_WORDS.test(cleaned.text), "filler paragraph still in the text");
@@ -58,6 +78,11 @@ for (const source of sources) {
     const removed = source.curriculumItems.length - cleaned.curriculumItems.length;
     const hadFiller = FILLER_WORDS.test(source.fullPublicText);
     assert.ok(hadFiller ? removed === 9 : removed === 0, `removed ${removed} items (expected ${hadFiller ? 9 : 0})`);
+  });
+
+  test(`${source.slug}: eligibility is just the qualifications`, () => {
+    assert.equal(cleaned.eligibility, EXPECTED_ELIGIBILITY[source.slug]);
+    assert.ok(!FILLER_WORDS.test(cleaned.eligibility ?? ""));
   });
 
   test(`${source.slug}: duration is ${EXPECTED_DURATION[source.slug] ?? "not shown"}`, () => {
@@ -99,4 +124,11 @@ test("duration is one consistent format, and absent when the text disagrees", ()
   assert.equal(courseDuration("a two intensive days course"), "2 days");
   assert.equal(courseDuration("Duration: 6 Months. Over one year."), null);
   assert.equal(courseDuration("No length is given here."), null);
+});
+
+test("eligibility keeps the qualification list and drops what was glued on", () => {
+  assert.equal(cleanEligibility(null), null);
+  assert.equal(cleanEligibility("10+2"), "10+2");
+  assert.equal(cleanEligibility("MBBS / BAMS & BDS Plasma Pen Safety Protocols"), "MBBS / BAMS & BDS");
+  assert.equal(cleanEligibility("Anyone with a passion for skincare"), "Anyone with a passion for skincare");
 });
