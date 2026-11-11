@@ -42,3 +42,8 @@ main select:not(:focus),
 main textarea:not(:focus),
 .courses-search,
 .catalogue-search{border-color:#7a8797}
+
+/* 8. Keyboard focus ring: it was a 38%-opaque teal (about 1.7:1 on white), easy to lose when tabbing.
+      Solid teal (5.6:1 on white), and a light gold ring on the dark sections where teal would be too dim. */
+:root{--focus:3px solid #1d7474}
+:where(.home-access-band,.home-library-band,.home-final-band,.home-band-library,.site-footer,.site-header,.signup-brand-panel) :focus-visible{outline-color:#f0d199}
