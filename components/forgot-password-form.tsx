@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { supabase } from "@/lib/supabase-browser";
+import { EMAIL_MAX, validateEmail } from "@/lib/validation";
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
@@ -10,6 +11,12 @@ export function ForgotPasswordForm() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const emailProblem = validateEmail(email);
+    if (emailProblem) {
+      setState("error");
+      setMessage(emailProblem);
+      return;
+    }
     setState("sending");
     setMessage("");
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
@@ -35,14 +42,16 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form className="upload-card" onSubmit={submit}>
+    <form className="upload-card" onSubmit={submit} noValidate>
       <label>
         Email address
         <input
           name="email"
           type="email"
           required
+          maxLength={EMAIL_MAX}
           autoComplete="email"
+          aria-invalid={state === "error" && Boolean(validateEmail(email))}
           value={email}
           disabled={state === "sending"}
           onChange={(event) => setEmail(event.target.value)}

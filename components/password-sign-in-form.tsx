@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase-browser";
+import { EMAIL_MAX, validateEmail } from "@/lib/validation";
 
 type PasswordSignInFormProps = {
   redirectTo: string;
@@ -36,6 +37,11 @@ export function PasswordSignInForm({ redirectTo }: PasswordSignInFormProps) {
     const email = String(formData.get("email") ?? "").trim();
     const password = String(formData.get("password") ?? "");
     setError("");
+    const problem = validateEmail(email) || (password ? "" : "Enter your password.");
+    if (problem) {
+      setError(problem);
+      return;
+    }
     setSubmitting(true);
     awaitingConfirmedSession.current = true;
 
@@ -48,11 +54,11 @@ export function PasswordSignInForm({ redirectTo }: PasswordSignInFormProps) {
   }
 
   return (
-    <form className="upload-card auth-form-card" onSubmit={submit}>
+    <form className="upload-card auth-form-card" onSubmit={submit} noValidate>
       <div className="field-grid single-column">
         <label>
           Email address
-          <input name="email" type="email" required autoComplete="email" disabled={submitting} />
+          <input name="email" type="email" required maxLength={EMAIL_MAX} autoComplete="email" disabled={submitting} />
         </label>
         <label>
           Password

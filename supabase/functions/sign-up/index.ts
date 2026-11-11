@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
+import { isValidEmail, isValidNewPassword, isValidUsername, verifyTurnstile } from "../_shared/signup-validation.ts";
 
 function requiredEnv(name: string): string {
   const value = Deno.env.get(name);
@@ -21,8 +22,8 @@ function response(request: Request, body: Record<string, string>, status = 200):
   return Response.json(body, { status, headers: corsHeaders(request) });
 }
 
-function isEmail(value: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+function clientIp(request: Request): string | null {
+  return request.headers.get("cf-connecting-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
 }
 
 Deno.serve(async (request) => {
@@ -36,17 +37,38 @@ Deno.serve(async (request) => {
   let email = "";
   let username = "";
   let password = "";
+  let honeypot = "";
+  let captchaToken = "";
   try {
     const body = await request.json();
     email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
     username = typeof body?.username === "string" ? body.username.trim() : "";
     password = typeof body?.password === "string" ? body.password : "";
+    honeypot = typeof body?.website === "string" ? body.website : "";
+    captchaToken = typeof body?.captchaToken === "string" ? body.captchaToken : "";
   } catch {
     return response(request, { error: "invalid_request" }, 400);
   }
 
-  if (!isEmail(email) || username.length < 2 || username.length > 100 || password.length < 8) {
+  // Bot trap: the hidden "website" field is invisible to people. If it is filled in,
+  // pretend the sign-up worked so the bot learns nothing, but create nothing.
+  if (honeypot.trim() !== "") {
+    return response(request, { status: "pending" }, 201);
+  }
+
+  if (!isValidEmail(email) || !isValidUsername(username) || !isValidNewPassword(password)) {
     return response(request, { error: "invalid_request" }, 400);
+  }
+
+  // Cloudflare Turnstile. Enforced as soon as TURNSTILE_SECRET_KEY is set as a
+  // function secret; until then sign-up behaves exactly as before.
+  const turnstileSecret = Deno.env.get("TURNSTILE_SECRET_KEY");
+  if (turnstileSecret) {
+    if (!(await verifyTurnstile(turnstileSecret, captchaToken, clientIp(request)))) {
+      return response(request, { error: "captcha_failed" }, 400);
+    }
+  } else {
+    console.warn("TURNSTILE_SECRET_KEY is not set: sign-up is not protected by a captcha.");
   }
 
   const supabaseUrl = requiredEnv("SUPABASE_URL");
