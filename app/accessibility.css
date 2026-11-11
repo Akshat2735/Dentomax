@@ -34,3 +34,11 @@ input::placeholder,textarea::placeholder,.signup-field input::placeholder{color:
 
 /* 6. Decorative book illustration on the home page: light text on the brown book spines. */
 .home-library-silhouette span{color:#fff8ea}
+
+/* 7. Form field outlines were 1.4-2.7:1 against their background; guidelines ask for 3:1 so people can see where
+      to type. Darker outline for text fields and drop-downs (the focus highlight is untouched). */
+main input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]):not([type="range"]):not(:focus),
+main select:not(:focus),
+main textarea:not(:focus),
+.courses-search,
+.catalogue-search{border-color:#7a8797}
