@@ -17,3 +17,6 @@
 .course-detail-grid>*,.course-main-content>*{min-width:0}
 .course-chapter{overflow-wrap:anywhere}
 @media(max-width:900px){.course-detail-grid{grid-template-columns:minmax(0,1fr)}.course-shell > .course-textbook-hero{padding:22px clamp(16px,4vw,28px) 28px!important}}
+
+/* the soft glow was meant for light text on the dark background; on the paper panel it just smudges the title */
+.course-textbook-hero h1{text-shadow:none}
