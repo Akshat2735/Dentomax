@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CourseImage } from "@/components/course-image";
 import { useEffect, useMemo, useState } from "react";
 import type { Course } from "@/lib/courses";
 
@@ -35,7 +36,7 @@ export function CourseDetail({ course }: { course: Course }) {
     <nav className="course-breadcrumb" aria-label="Breadcrumb"><Link href="/">Home</Link><span>/</span><Link href="/courses">Courses</Link><span>/</span><b>{course.title}</b></nav>
     <section className="course-detail-hero course-textbook-hero">
       <div className="course-hero-copy"><p className="eyebrow">{course.category}</p><h1>{course.title}</h1><p className="course-hero-summary">{course.descriptions.short}</p><div className="course-facts" aria-label="Course facts">{course.metadata.durationClaims.slice(0, 2).map((claim) => <span key={claim}><b>Duration</b>{claim}</span>)}{course.metadata.level && <span><b>Level</b>{course.metadata.level}</span>}{course.eligibility && <span><b>For</b>Eligible applicants</span>}</div><div className="hero-enquiry"><div><small>Course price</small><strong>{price ? formatPrice(price) : "Price unavailable"}</strong>{price && price.originalAmount !== null && <s>{new Intl.NumberFormat("en-IN", { style: "currency", currency: price.currency, maximumFractionDigits: 0 }).format(price.originalAmount)}</s>}</div><a className="button" href="#enquiry">Enquire about this course <span>→</span></a></div></div>
-      <div className="course-hero-visual"><img src={course.media.featuredImage.localPath} alt={course.media.featuredImage.alt || `${course.title} course`} /><div className="course-hero-action-card"><p>Published course price</p><strong>{price ? formatPrice(price) : "Price unavailable"}</strong>{course.metadata.durationClaims[0] && <small>{course.metadata.durationClaims[0]}</small>}<a href="#enquiry">Request course information <span>→</span></a></div></div>
+      <div className="course-hero-visual"><CourseImage src={course.media.featuredImage.localPath} fallbackAlt={course.media.featuredImage.alt || `${course.title} course`} sizes="(max-width: 900px) 100vw, 620px" priority /><div className="course-hero-action-card"><p>Published course price</p><strong>{price ? formatPrice(price) : "Price unavailable"}</strong>{course.metadata.durationClaims[0] && <small>{course.metadata.durationClaims[0]}</small>}<a href="#enquiry">Request course information <span>→</span></a></div></div>
     </section>
     <nav className="course-section-nav" aria-label="Course sections">{sections.map((section) => <a href={`#${section}`} key={section} aria-current={activeSection === section ? "location" : undefined}>{labels[section]}</a>)}</nav>
     <div className="course-detail-grid"><div className="course-main-content">
@@ -48,7 +49,7 @@ export function CourseDetail({ course }: { course: Course }) {
     </div>
     <aside className="course-sidebar">
       <section className="course-price-card" id="enquiry"><p className="eyebrow">Course price</p>{price ? <><div className="course-price"><strong>{formatPrice(price)}</strong>{price.originalAmount !== null && <span><s>{new Intl.NumberFormat("en-IN", { style: "currency", currency: price.currency, maximumFractionDigits: 0 }).format(price.originalAmount)}</s>{price.discountLabel}</span>}</div>{price.priceLabel && <p>{price.priceLabel}</p>}</> : <p>Price is not publicly available for this course.</p>}<a className="button" href="#enquiry-note">Request course information <span>→</span></a><p id="enquiry-note" className="enquiry-note">Enrollment is not processed in this library. Use this record to discuss availability with your institution administrator.</p></section>
-      <section><p className="eyebrow">Course information</p><dl>{course.metadata.durationClaims.length > 0 && <><dt>Duration claims</dt><dd>{course.metadata.durationClaims.join("; ")}</dd></>}<dt>Category</dt><dd>{course.category}</dd>{course.metadata.level ? <><dt>Level</dt><dd>{course.metadata.level}</dd></> : null}<dt>Course format</dt><dd>Not publicly specified</dd></dl></section>
+      <section><p className="eyebrow">Course information</p><dl>{course.metadata.durationClaims.length > 0 && <><dt>Duration</dt><dd>{course.metadata.durationClaims.join("; ")}</dd></>}<dt>Category</dt><dd>{course.category}</dd>{course.metadata.level ? <><dt>Level</dt><dd>{course.metadata.level}</dd></> : null}</dl></section>
       <Link className="sidebar-course-link" href="/courses#course-catalogue">Back to course catalogue →</Link>
     </aside></div>
     <a className="course-mobile-enquiry" href="#enquiry"><span>{price ? formatPrice(price) : "Course information"}</span><b>Enquire →</b></a>
