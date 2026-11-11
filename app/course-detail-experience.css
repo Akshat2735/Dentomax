@@ -20,3 +20,7 @@
 
 /* the soft glow was meant for light text on the dark background; on the paper panel it just smudges the title */
 .course-textbook-hero h1{text-shadow:none}
+
+/* sidebar link sits on the dark background, not on a card */
+.course-sidebar a.sidebar-course-link{color:#a8dcd5}
+.course-sidebar a.sidebar-course-link:hover{color:#fff}
