@@ -40,7 +40,3 @@ verify_jwt = true
 [functions.sign-up]
 # Registration validates and creates a restricted profile server-side.
 verify_jwt = false
-
-[functions.admin-claim]
-# The first authenticated account can bootstrap the administrator dashboard.
-verify_jwt = true

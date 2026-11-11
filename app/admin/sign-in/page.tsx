@@ -10,7 +10,6 @@ export default function AdminSignInPage() {
         <p>Use the administrator account created for this library. Public registration is disabled.</p>
       </section>
       <AdminSignInForm />
-      <p className="page-footer-link"><a className="form-link" href="/admin/setup">First-time administrator setup</a></p>
     </main>
   );
 }
