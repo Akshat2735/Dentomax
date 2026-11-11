@@ -10,6 +10,7 @@ import "./study-dashboard.css";
 import "./course-detail-experience.css";
 import "./account-experience.css";
 import "./design-system.css";
+import "./accessibility.css";
 import { SiteAtmosphere } from "@/components/site-atmosphere";
 import { ScrollExperience } from "@/components/scroll-experience";
 import { SiteFooter } from "@/components/site-footer";
