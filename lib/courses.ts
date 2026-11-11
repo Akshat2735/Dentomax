@@ -1,4 +1,5 @@
 import sourceCatalogue from "@/data/dentomax-academy-courses.json";
+import { cleanCourseText, cleanHeading } from "@/lib/clean-text";
 
 type SourceCourse = {
   sourceId: number; slug: string; title: string; category: string; sourceUrl: string; sourceVerifiedAt: string;
@@ -20,16 +21,16 @@ export type Course = {
   additionalSections: { type: "source-section"; title: string; content: string }[];
 };
 
-function plainText(value: string) { return value.replace(/<[^>]*>/g, " ").replace(/\[[^\]]*]/g, " ").replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ").trim(); }
-function durationClaims(text: string) { return [...new Set(text.match(/(?:Duration\s*:\s*)?(?:\d+\s*(?:day|days|week|weeks|month|months|year|years)|one year|two years)/gi) ?? [])]; }
 function localImagePath(slug: string, sourceUrl: string) { const extension = sourceUrl.match(/\.(png|jpe?g|webp)(?:$|\?)/i)?.[1]?.toLowerCase() ?? "jpg"; return `/course-images/${slug}.${extension === "jpeg" ? "jpg" : extension}`; }
 function priceAmount(value: string, minorUnit: number) { return Number(value) / 10 ** minorUnit; }
 
 export const courses: Course[] = (sourceCatalogue as SourceCourse[]).map((source) => {
-  const short = plainText(source.excerptHtml).replace(/\[&hellip;\]|\[\.\.\.\]|&hellip;/gi, "").trim();
-  const features = source.curriculumItems.filter((item) => /(?:hands-on|live demonstration|interactive workshop|certification exam|placement assistance|internship|clinical exposure|case-based|case discussion)/i.test(item));
-  const certification = source.curriculumItems.filter((item) => /certification/i.test(item));
-  const sectionTitles = [...new Set([...source.headings, ...source.emphasizedHeadings])];
+  // Summary, duration and topic list come from the cleaned course text (see lib/clean-text.ts).
+  const cleaned = cleanCourseText(source.fullPublicText, source.curriculumItems, source.eligibilitySourceText);
+  const short = cleaned.short;
+  const features = cleaned.curriculumItems.filter((item) => /(?:hands-on|live demonstration|interactive workshop|certification exam|placement assistance|internship|clinical exposure|case-based|case discussion)/i.test(item));
+  const certification = cleaned.curriculumItems.filter((item) => /certification/i.test(item));
+  const sectionTitles = [...new Set([...source.headings, ...source.emphasizedHeadings].map(cleanHeading).filter(Boolean))];
   const sourcePrice = source.price;
   const price = sourcePrice ? {
     amount: priceAmount(sourcePrice.amount, sourcePrice.minorUnit),
@@ -43,12 +44,12 @@ export const courses: Course[] = (sourceCatalogue as SourceCourse[]).map((source
   return {
     sourceId: source.sourceId, slug: source.slug, title: source.title.replace(/\s+/g, " ").trim(), category: source.category,
     source: { url: source.sourceUrl, verifiedAt: source.sourceVerifiedAt },
-    descriptions: { short, fullPublicText: source.fullPublicText, sourceHtml: source.contentHtml },
-    metadata: { level: null, price, format: null, schedule: null, durationClaims: durationClaims(source.fullPublicText), tags: source.tags },
-    instructors: [], requirements: [], objectives: [], learningOutcomes: [], eligibility: source.eligibilitySourceText,
+    descriptions: { short, fullPublicText: cleaned.text, sourceHtml: source.contentHtml },
+    metadata: { level: null, price, format: null, schedule: null, durationClaims: cleaned.duration ? [cleaned.duration] : [], tags: source.tags },
+    instructors: [], requirements: [], objectives: [], learningOutcomes: [], eligibility: cleaned.eligibility,
     features: [...new Set(features)], certification: [...new Set(certification)], enrolment: null, faqs: [], relatedCourses: [], testimonials: [],
     media: { featuredImage: { localPath: localImagePath(source.slug, source.featuredImage.url), sourceUrl: source.featuredImage.url, alt: source.featuredImage.alt, captionHtml: source.featuredImage.captionHtml }, additional: [] },
-    curriculum: { structure: "flat-topic-list", items: source.curriculumItems },
+    curriculum: { structure: "flat-topic-list", items: cleaned.curriculumItems },
     additionalSections: sectionTitles.map((title) => ({ type: "source-section", title, content: "This heading and its associated public course-page content are preserved in the full public content record." })),
   };
 });
