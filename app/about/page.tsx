@@ -1,4 +1,10 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "About",
+  description: "Dentomax brings public course information and a protected professional reference library together in one focused learning space.",
+};
 
 export default function AboutPage() {
   return <main className="page-shell about-page" id="main-content">

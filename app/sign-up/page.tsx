@@ -1,4 +1,11 @@
 import { SignUpForm } from "@/components/sign-up-form";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Create an account",
+  description: "Register to request access to the Dentomax protected reference library.",
+  robots: { index: false, follow: false },
+};
 
 function safeDestination(value: string | undefined) {
   return value?.startsWith("/") && !value.startsWith("//") ? value : "/";
