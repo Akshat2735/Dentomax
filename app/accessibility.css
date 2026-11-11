@@ -8,7 +8,7 @@
 .catalogue-filter-panel{background:rgba(255,253,248,.96)}
 .account-actions{background:rgba(250,246,234,.96)}
 .signup-form{background:rgba(255,255,255,.97)}
-.course-section-nav{background:rgba(247,243,233,.97)}
+.course-section-nav{background:rgba(247,243,233,.97)!important} /* the page stylesheet sets this with !important */
 
 /* 2. Small labels above headings: the teal was 4.1-4.4:1 on the cream panels. */
 .eyebrow{color:#1f5f5e}
@@ -28,6 +28,9 @@
 input::placeholder,textarea::placeholder,.signup-field input::placeholder{color:#6b7788}
 
 /* 5. Dark panels: the sign-up side panel was a translucent teal over a photo; make it solid and use light text. */
-.signup-brand-panel{background:linear-gradient(145deg,#13333c,#205c5d)}
-.signup-brand-panel .brand-lockup small,.signup-brand-panel .eyebrow,.signup-brand-panel small,.signup-footer,.signup-brand-copy p{color:#e6f0ee}
+.signup-brand-panel{background:linear-gradient(145deg,#13333c,#205c5d)!important} /* ditto */
+.signup-brand-panel .brand-lockup small,.signup-brand-panel .eyebrow,.signup-brand-panel small,.signup-footer,.signup-brand-copy p,.signup-brand-copy > p:not(.eyebrow),.review-note span:not(.review-icon){color:#e6f0ee}
 .site-footer .brand-lockup small{color:#a9c6bf}
+
+/* 6. Decorative book illustration on the home page: light text on the brown book spines. */
+.home-library-silhouette span{color:#fff8ea}
