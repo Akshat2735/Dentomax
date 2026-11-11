@@ -25,3 +25,5 @@
 /* hero: the second button was grey with teal text; use the same glass style as the final call to action */
 .premium-home .home-band-library .secondary-button{color:#f6efe2;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.3)}
 .premium-home .home-band-library .secondary-button small{color:#e3c58f;opacity:1}
+/* both cards: number, title and description start at the same height whatever the description length */
+.premium-home .home-access-panels a{align-content:start;grid-template-rows:auto auto 1fr}
