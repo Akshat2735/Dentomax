@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase-browser";
+import { PASSWORD_MAX, validateNewPassword, validatePasswordConfirmation } from "@/lib/validation";
 
 type ResetState = "checking" | "ready" | "saving" | "saved" | "expired" | "error";
 
@@ -36,14 +37,10 @@ export function ResetPasswordForm() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (password.length < 8) {
+    const problem = validateNewPassword(password) || validatePasswordConfirmation(password, confirmation);
+    if (problem) {
       setState("error");
-      setMessage("Use a password with at least 8 characters.");
-      return;
-    }
-    if (password !== confirmation) {
-      setState("error");
-      setMessage("The passwords do not match.");
+      setMessage(problem);
       return;
     }
 
@@ -78,15 +75,15 @@ export function ResetPasswordForm() {
   }
 
   return (
-    <form className="upload-card auth-form-card" onSubmit={submit}>
+    <form className="upload-card auth-form-card" onSubmit={submit} noValidate>
       <div className="field-grid single-column">
         <label>
           New password
-          <div className="password-input"><input type={showPassword ? "text" : "password"} minLength={8} required autoComplete="new-password" value={password} disabled={state === "saving"} onChange={(event) => setPassword(event.target.value)} /><button className="password-toggle" type="button" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword((current) => !current)}>{showPassword ? "Hide" : "Show"}</button></div>
+          <div className="password-input"><input type={showPassword ? "text" : "password"} maxLength={PASSWORD_MAX} required autoComplete="new-password" value={password} disabled={state === "saving"} onChange={(event) => setPassword(event.target.value)} /><button className="password-toggle" type="button" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword((current) => !current)}>{showPassword ? "Hide" : "Show"}</button></div>
         </label>
         <label>
           Confirm new password
-          <div className="password-input"><input type={showPassword ? "text" : "password"} minLength={8} required autoComplete="new-password" value={confirmation} disabled={state === "saving"} onChange={(event) => setConfirmation(event.target.value)} /><button className="password-toggle" type="button" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword((current) => !current)}>{showPassword ? "Hide" : "Show"}</button></div>
+          <div className="password-input"><input type={showPassword ? "text" : "password"} maxLength={PASSWORD_MAX} required autoComplete="new-password" value={confirmation} disabled={state === "saving"} onChange={(event) => setConfirmation(event.target.value)} /><button className="password-toggle" type="button" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword((current) => !current)}>{showPassword ? "Hide" : "Show"}</button></div>
         </label>
       </div>
       {message && <p className="notice error" role="alert">{message}</p>}
