@@ -1,4 +1,5 @@
 import sourceCatalogue from "@/data/dentomax-academy-courses.json";
+import { cleanHeading } from "@/lib/clean-text";
 
 type SourceCourse = {
   sourceId: number; slug: string; title: string; category: string; sourceUrl: string; sourceVerifiedAt: string;
@@ -29,7 +30,7 @@ export const courses: Course[] = (sourceCatalogue as SourceCourse[]).map((source
   const short = plainText(source.excerptHtml).replace(/\[&hellip;\]|\[\.\.\.\]|&hellip;/gi, "").trim();
   const features = source.curriculumItems.filter((item) => /(?:hands-on|live demonstration|interactive workshop|certification exam|placement assistance|internship|clinical exposure|case-based|case discussion)/i.test(item));
   const certification = source.curriculumItems.filter((item) => /certification/i.test(item));
-  const sectionTitles = [...new Set([...source.headings, ...source.emphasizedHeadings])];
+  const sectionTitles = [...new Set([...source.headings, ...source.emphasizedHeadings].map(cleanHeading).filter(Boolean))];
   const sourcePrice = source.price;
   const price = sourcePrice ? {
     amount: priceAmount(sourcePrice.amount, sourcePrice.minorUnit),
