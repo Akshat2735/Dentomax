@@ -17,7 +17,11 @@ import { SiteHeader } from "@/components/library-navigation";
 import { SiteToast } from "@/components/site-toast";
 import { PageTransition } from "@/components/page-transition";
 
-export const metadata: Metadata = { title: "Dentomax Library", description: "A protected clinical learning and reference environment." };
+export const metadata: Metadata = {
+  title: { default: "Dentomax Library | Dental courses and a protected reference library", template: "%s | Dentomax Library" },
+  description: "Explore Dentomax's catalogue of professional dental, facial aesthetics and cosmetology courses, and sign in to a protected clinical reference library.",
+  applicationName: "Dentomax Library",
+};
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

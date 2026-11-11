@@ -1,4 +1,10 @@
 import { AdminSignInForm } from "@/components/admin-sign-in-form";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Administrator sign in",
+  robots: { index: false, follow: false },
+};
 
 export default function AdminSignInPage() {
   return (

@@ -1,4 +1,11 @@
 import { PasswordSignInForm } from "@/components/password-sign-in-form";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Sign in",
+  description: "Sign in to your Dentomax Library account.",
+  robots: { index: false, follow: false },
+};
 
 function safeDestination(value: string | undefined) {
   return value?.startsWith("/") && !value.startsWith("//") ? value : "/";
