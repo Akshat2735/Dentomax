@@ -74,6 +74,12 @@ export function leadText(fullText: string, target = 180, max = 420): string {
   return picked.join(" ").replace(/\s+([.,;:!?])/g, "$1");
 }
 
+/** The first whole sentence of a summary, for the small text on a course card. */
+export function firstSentence(text: string): string {
+  const clean = collapse(text);
+  return clean.match(/^.+?[.!?](?=\s+[A-Z“"]|$)/)?.[0] ?? clean;
+}
+
 // ---- Duration ---------------------------------------------------------------------------------------
 const NUMBER_WORDS: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12 };
 const DURATION_PATTERN = /\b(?:(\d+)|(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve))[\s-]+(?:(?:intensive|comprehensive|immersive|full|consecutive|hands-on)\s+)?(day|week|month|year)s?\b/gi;

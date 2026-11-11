@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CourseImage } from "@/components/course-image";
+import { firstSentence } from "@/lib/clean-text";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { courseCategories, courseSummaries, type CourseSummary } from "@/lib/course-summaries";
@@ -65,4 +66,4 @@ export function CoursesCatalogue() {
   </main>;
 }
 
-function CourseCard({ course }: { course: CourseSummary }) { return <article className="course-card premium-course-card"><div className="course-image-frame"><CourseImage src={course.imagePath} fallbackAlt={course.imageAlt || `${course.title} course`} sizes="(max-width: 640px) 100vw, (max-width: 1000px) 50vw, 420px" lazy /><span className="course-card-price">{priceLabel(course)}</span></div><div><p className="course-category">{course.category}</p><h2>{course.title}</h2><p>{course.shortDescription}</p><div className="course-card-meta">{course.durationClaims[0] && <span>{course.durationClaims[0]}</span>}<span>{priceLabel(course)}</span></div><Link href={`/courses/${course.slug}`}>View course <span aria-hidden="true">→</span></Link></div></article>; }
+function CourseCard({ course }: { course: CourseSummary }) { return <article className="course-card premium-course-card"><div className="course-image-frame"><CourseImage src={course.imagePath} fallbackAlt={course.imageAlt || `${course.title} course`} sizes="(max-width: 640px) 100vw, (max-width: 1000px) 50vw, 420px" lazy /><span className="course-card-price">{priceLabel(course)}</span></div><div><p className="course-category">{course.category}</p><h2>{course.title}</h2><p>{firstSentence(course.shortDescription)}</p>{course.durationClaims[0] && <div className="course-card-meta"><span>{course.durationClaims[0]}</span></div>}<Link href={`/courses/${course.slug}`}>View course <span aria-hidden="true">→</span></Link></div></article>; }
