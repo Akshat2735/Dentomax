@@ -1,0 +1,49 @@
+/* Colour contrast fixes (WCAG AA: 4.5:1 for normal text, 3:1 for large text).
+   Loaded last (see layout.tsx), so these deliberately override the page stylesheets. Each block says why.
+   Measured with axe-core plus a background-compositing check over every public page at 1280px and 390px wide. */
+
+/* 1. Panels that were only 72-88% opaque over the dark page photo. The panel behind the grey text was really
+      a darker grey-beige, so the text measured 2.4-3.5:1. Nearly opaque now (the light "glass" look stays). */
+.course-chapter{background:linear-gradient(145deg,rgba(255,253,247,.97),rgba(244,249,244,.95))}
+.catalogue-filter-panel{background:rgba(255,253,248,.96)}
+.account-actions{background:rgba(250,246,234,.96)}
+.signup-form{background:rgba(255,255,255,.97)}
+.course-section-nav{background:rgba(247,243,233,.97)!important} /* the page stylesheet sets this with !important */
+
+/* 2. Small labels above headings: the teal was 4.1-4.4:1 on the cream panels. */
+.eyebrow{color:#1f5f5e}
+
+/* 3. Muted grey-teal text on the light panels. */
+.course-section-nav a{color:#2f4f5a}
+.hero-enquiry small,.course-price-card .eyebrow,.course-sidebar .eyebrow{color:#4a5d5e}
+.enquiry-note{color:#4d5f60!important}
+.catalogue-filter-controls legend,.catalogue-filter-controls>label{color:#455a5d}
+.catalogue-filter-controls .filter-option{color:#3d5155}
+.account-actions p:not(.eyebrow){color:#44575a}
+.home-learning-journey li>span{color:#7a5a2d}
+.home-learning-journey p{color:#4a5f62}
+
+/* 4. Sign-up page: hint text was light grey-blue on white (3.4-3.6:1); placeholders 2.5:1. */
+.field-feedback,.security-note,.signin-prompt{color:#566274}
+input::placeholder,textarea::placeholder,.signup-field input::placeholder{color:#6b7788}
+
+/* 5. Dark panels: the sign-up side panel was a translucent teal over a photo; make it solid and use light text. */
+.signup-brand-panel{background:linear-gradient(145deg,#13333c,#205c5d)!important} /* ditto */
+.signup-brand-panel .brand-lockup small,.signup-brand-panel .eyebrow,.signup-brand-panel small,.signup-footer,.signup-brand-copy p,.signup-brand-copy > p:not(.eyebrow),.review-note span:not(.review-icon){color:#e6f0ee}
+.site-footer .brand-lockup small{color:#a9c6bf}
+
+/* 6. Decorative book illustration on the home page: light text on the brown book spines. */
+.home-library-silhouette span{color:#fff8ea}
+
+/* 7. Form field outlines were 1.4-2.7:1 against their background; guidelines ask for 3:1 so people can see where
+      to type. Darker outline for text fields and drop-downs (the focus highlight is untouched). */
+main input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]):not([type="range"]):not(:focus),
+main select:not(:focus),
+main textarea:not(:focus),
+.courses-search,
+.catalogue-search{border-color:#7a8797}
+
+/* 8. Keyboard focus ring: it was a 38%-opaque teal (about 1.7:1 on white), easy to lose when tabbing.
+      Solid teal (5.6:1 on white), and a light gold ring on the dark sections where teal would be too dim. */
+:root{--focus:3px solid #1d7474}
+:where(.home-access-band,.home-library-band,.home-final-band,.home-band-library,.site-footer,.site-header,.signup-brand-panel) :focus-visible{outline-color:#f0d199}
